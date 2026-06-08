@@ -642,7 +642,7 @@
             return matches ? matches[1] : url.trim();
         }
 
-        // Sincroniza dinamicamente puxando a planilha do Google Sheets via Fetch em formato Excel (Ignorando CORS pelo proxy corsproxy.io)
+        // Sincroniza dinamicamente puxando a planilha do Google Sheets via Fetch com múltiplos proxies e bypass CORS inteligente
         async function syncGoogleSheet() {
             const inputVal = document.getElementById('gsheet-url').value;
             const sheetId = extractSheetId(inputVal);
@@ -652,28 +652,61 @@
                 return;
             }
 
-            // URL com desvio de CORS para permitir a leitura direta pelo navegador
-            const exportUrl = `https://corsproxy.io/?url=https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            const targetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            
+            // Esteira sequencial de proxies para contornar qualquer barreira de CORS do navegador
+            const proxies = [
+                // Rota 1: AllOrigins (Altamente estável e permissivo para qualquer origem de sandbox)
+                url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                // Rota 2: CodeTabs CORS Proxy (Extremamente rápido como fallback)
+                url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+                // Rota 3: corsproxy.io (Como contingência final)
+                url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
+            ];
 
             document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-amber-50 text-amber-800 px-3 py-2.5 rounded-lg border border-amber-100";
             document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Conectando à nuvem Google Sheets...`;
             
             document.getElementById('diagnostics-panel').innerHTML = '';
-            logDiagnostic(`Iniciando conexão com Google Planilhas através do túnel corsproxy.io. ID: "${sheetId}"`);
+            logDiagnostic(`Iniciando conexão segura com Google Sheets. ID: "${sheetId}"`);
+
+            let success = false;
+            let bytes = null;
+
+            for (let i = 0; i < proxies.length; i++) {
+                const routeNum = i + 1;
+                const proxyUrl = proxies[i](targetUrl);
+                logDiagnostic(`Tentando carregar dados via Rota ${routeNum}...`);
+
+                try {
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) {
+                        throw new Error(`Servidor proxy retornou erro HTTP ${response.status}`);
+                    }
+
+                    const arrayBuffer = await response.arrayBuffer();
+                    bytes = new Uint8Array(arrayBuffer);
+
+                    // Validação de assinatura ZIP 'PK' (0x50, 0x4B) padrão para arquivos .xlsx
+                    if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B) {
+                        success = true;
+                        logDiagnostic(`Download e validação concluídos com sucesso via Rota ${routeNum}!`, 'success');
+                        break;
+                    } else {
+                        throw new Error("O arquivo retornado não possui assinatura binária de um documento Excel válido.");
+                    }
+                } catch (err) {
+                    logDiagnostic(`Falha na Rota ${routeNum}: ${err.message}`, 'warn');
+                }
+            }
 
             try {
-                const response = await fetch(exportUrl);
-                if (!response.ok) {
-                    throw new Error("Não foi possível acessar a planilha. Confirme se as configurações de compartilhamento estão como 'Qualquer pessoa com o link' em modo 'Leitor'.");
+                if (!success) {
+                    throw new Error("Não foi possível estabelecer contato através de nenhum servidor de segurança. Verifique se o compartilhamento geral da sua planilha está ativado como 'Leitor' para 'Qualquer pessoa com o link'.");
                 }
 
-                const arrayBuffer = await response.arrayBuffer();
-                const data = new Uint8Array(arrayBuffer);
-                const workbook = XLSX.read(data, { type: 'array' });
-
-                logDiagnostic("Download de arquivo em nuvem concluído com sucesso. Iniciando processamento do documento.");
-                
-                // Processa o Workbook baixado
+                logDiagnostic("Iniciando decodificação e processamento do arquivo binário (.xlsx).");
+                const workbook = XLSX.read(bytes, { type: 'array' });
                 processWorkbook(workbook, "Google Planilhas");
 
                 // Salva no localStorage para auto-atualizar nas próximas visitas
@@ -681,7 +714,7 @@
                 document.getElementById('btn-disconnect-cloud').classList.remove('hidden');
 
                 document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-emerald-100 text-emerald-900 px-3 py-2.5 rounded-lg border border-emerald-200 font-semibold";
-                document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-cloud text-emerald-600"></i> Conectado e Sincronizado automaticamente ao Google Sheets!`;
+                document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-cloud text-emerald-600"></i> Conectado e Sincronizado com o Google Sheets!`;
                 
                 showNotification("Sincronizado com o Google Sheets!", "success");
 
@@ -692,10 +725,10 @@
             } catch (error) {
                 console.error(error);
                 document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-red-50 text-red-800 px-3 py-2.5 rounded-lg border border-red-100";
-                document.getElementById('data-status-text').innerText = "Erro ao acessar a planilha online. Verifique se o compartilhamento está público.";
+                document.getElementById('data-status-text').innerText = "Erro ao conectar. Verifique se o link está público e se a planilha possui dados.";
                 
                 logDiagnostic(`Erro na conexão online: ${error.message}`, 'error');
-                showNotification("Erro na conexão com Google Planilhas. Verifique o compartilhamento.", "error");
+                showNotification("Erro na sincronização. Detalhes salvos na central de diagnóstico.", "error");
             }
         }
 
