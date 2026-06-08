@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Campanha de Reforma - IPC</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para gráficos dinâmicos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome para ícones premium -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS para ler o arquivo Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header Principal -->
+    <header class="bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-950 text-white shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                
+                <!-- Logo & Identidade -->
+                <div class="flex items-center gap-4">
+                    <div class="bg-black p-1 rounded-xl shadow-inner flex items-center justify-center w-24 h-16 md:w-28 md:h-20 overflow-hidden">
+                        <img src="marca_color.jpg" alt="Logo IPC" class="max-w-full max-h-full object-contain" onerror="this.src='https://placehold.co/200x120/000000/ffffff?text=IPC'">
+                    </div>
+                    <div>
+                        <span class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-emerald-400">Controle de Arrecadação</span>
+                        <h1 class="text-lg md:text-xl font-extrabold tracking-tight">Campanha de Compromisso</h1>
+                        <p class="text-[11px] text-slate-300">Igreja Presbiteriana do Centenário</p>
+                    </div>
+                </div>
+
+                <!-- Menu/Navegação -->
+                <nav class="flex flex-wrap justify-center gap-2 bg-emerald-950/50 p-1.5 rounded-xl border border-emerald-800/40">
+                    <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-emerald-600 text-white shadow-md">
+                        <i class="fa-solid fa-chart-line mr-2"></i>Visão Geral
+                    </button>
+                    <button onclick="switchTab('pledges')" id="tab-pledges" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200">
+                        <i class="fa-solid fa-users mr-2"></i>Compromissos Realizados
+                    </button>
+                    <button onclick="switchTab('categories')" id="tab-categories" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200">
+                        <i class="fa-solid fa-layer-group mr-2"></i>Metas por Categoria
+                    </button>
+                    <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200">
+                        <i class="fa-solid fa-calculator mr-2"></i>Simulador & Pix
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notificações Dinâmicas -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 max-w-sm"></div>
+
+    <!-- Container Principal do Conteúdo -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Bloco de Importação do Excel CAMPANHA REFORMA IPC.xlsx (Colapsável com Abas) -->
+        <div class="mb-8 bg-white rounded-2xl p-6 shadow-sm border border-slate-100 transition-all hover:shadow-md">
+            
+            <!-- Cabeçalho de Controle de Exibição -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer group" onclick="toggleImporter()">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-emerald-50 text-emerald-700 rounded-xl group-hover:bg-emerald-100 transition-colors">
+                        <i class="fa-regular fa-file-excel text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            Configuração e Sincronização dos Dados
+                            <span id="badge-importer-status" class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">Ativo</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Selecione entre sincronização automática com o <strong class="text-emerald-700">Google Planilhas</strong> ou importação manual de arquivo.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Botão de Ocultar / Mostrar -->
+                <button id="btn-toggle-importer" class="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm" onclick="event.stopPropagation(); toggleImporter();">
+                    <span id="text-toggle-importer">Ocultar Configuração</span>
+                    <i id="icon-toggle-importer" class="fa-solid fa-chevron-up transition-transform duration-200"></i>
+                </button>
+            </div>
+            
+            <!-- Corpo do Importador -->
+            <div id="importer-content" class="mt-6 pt-6 border-t border-slate-100 space-y-6 transition-all duration-300">
+                
+                <!-- Sub-menu do leitor para alternar entre Cloud e Local -->
+                <div class="flex border-b border-slate-100">
+                    <button onclick="switchImporterTab('cloud')" id="importer-tab-cloud" class="px-4 py-2 text-xs font-bold border-b-2 border-emerald-600 text-emerald-700 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-cloud"></i> Google Planilhas (Sincronização Nuvem)
+                    </button>
+                    <button onclick="switchImporterTab('local')" id="importer-tab-local" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-file-excel"></i> Arquivo Local (.xlsx)
+                    </button>
+                </div>
+
+                <!-- SUB-CONTEÚDO CLOUD (GOOGLE SHEETS) -->
+                <div id="importer-content-cloud" class="space-y-4">
+                    <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <h4 class="text-xs font-bold text-slate-700">Como conectar sua planilha do Google:</h4>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">
+                                1. No seu Google Sheets, clique em <strong class="text-slate-700">Compartilhar</strong> (canto superior direito).<br>
+                                2. Altere o acesso geral para <strong class="text-emerald-700">"Qualquer pessoa com o link"</strong> em modo <strong class="text-slate-700">Leitor</strong>.<br>
+                                3. Copie o link e cole no campo abaixo para sincronizar automaticamente!
+                            </p>
+                        </div>
+                        <button onclick="loadMockData()" class="px-3.5 py-2 border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 rounded-xl text-xs font-semibold bg-white flex items-center gap-1.5 shrink-0 self-start md:self-center">
+                            <i class="fa-solid fa-rotate-left"></i> Carregar Demonstração
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-grow">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                                <i class="fa-solid fa-link text-xs"></i>
+                            </span>
+                            <input type="text" id="gsheet-url" placeholder="Cole aqui o link de compartilhamento da Google Planilha..." class="pl-9 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs font-semibold shadow-inner bg-slate-50/50">
+                        </div>
+                        <button onclick="syncGoogleSheet()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md">
+                            <i class="fa-solid fa-arrows-rotate"></i> Conectar & Sincronizar
+                        </button>
+                        <button id="btn-disconnect-cloud" onclick="disconnectGoogleSheet()" class="hidden px-4 py-3 border border-red-200 hover:bg-red-50 text-red-600 rounded-xl text-xs font-semibold transition-all">
+                            <i class="fa-solid fa-unlink"></i> Desconectar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SUB-CONTEÚDO LOCAL (EXCEL LOCAL) -->
+                <div id="importer-content-local" class="hidden space-y-4">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <p class="text-xs text-slate-500">
+                            Arraste ou selecione o arquivo Excel localmente de seu computador ou celular para atualizar os dados temporariamente nesta sessão.
+                        </p>
+                        <button onclick="exportHTML()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-file-export"></i> Exportar com Dados Atuais
+                        </button>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <!-- Dropzone de Excel -->
+                        <label class="relative flex-grow flex items-center justify-center px-4 py-3 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/20 transition-all duration-200 group">
+                            <input type="file" id="excel-file" accept=".xlsx, .xls" class="hidden" onchange="handleExcelUpload(event)">
+                            <div class="flex items-center gap-2.5 text-slate-600 group-hover:text-emerald-700">
+                                <i class="fa-solid fa-cloud-arrow-up text-lg group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xs font-semibold">Escolher CAMPANHA REFORMA IPC.xlsx</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Indicador de Status dos Dados -->
+                <div id="data-status-bar" class="flex items-center gap-2 text-xs bg-emerald-50 text-emerald-800 px-3 py-2.5 rounded-lg border border-emerald-100">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="data-status-text">Visualizando dados de demonstração integrados. Insira seu arquivo Excel para atualizar.</span>
+                </div>
+
+                <!-- Central de Diagnóstico Técnico de Importação -->
+                <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50">
+                    <button onclick="toggleDiagnostics()" class="w-full flex items-center justify-between px-4 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-terminal"></i> Central de Diagnóstico da Planilha</span>
+                        <i id="diag-toggle-icon" class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div id="diagnostics-panel" class="hidden p-4 border-t border-slate-200/50 font-mono text-[11px] text-slate-700 space-y-2 max-h-60 overflow-y-auto">
+                        <p class="text-slate-400 italic">Nenhum diagnóstico gerado. Faça upload de uma planilha para iniciar o rastreamento técnico.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ABA 1: VISÃO GERAL ================= -->
+        <div id="tab-content-overview" class="tab-content space-y-8">
+            
+            <!-- Cards de Indicadores de Desempenho (KPIs) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                
+                <!-- Card Meta Financeira -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3 hover:translate-y-[-2px] transition-transform duration-200">
+                    <div class="p-3 bg-amber-50 rounded-xl text-amber-600 shrink-0">
+                        <i class="fa-solid fa-bullseye text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Meta Financeira</p>
+                        <h3 id="kpi-target-value" class="text-base font-black text-slate-800 mt-0.5">R$ 0,00</h3>
+                        <p class="text-[10px] text-amber-600 font-semibold mt-0.5"><i class="fa-solid fa-file-invoice mr-1"></i>Soma C7:C10</p>
+                    </div>
+                </div>
+
+                <!-- Card Total Compromisso (Z + AA + AB + AC) -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3 hover:translate-y-[-2px] transition-transform duration-200">
+                    <div class="p-3 bg-indigo-50 rounded-xl text-indigo-600 shrink-0">
+                        <i class="fa-solid fa-file-signature text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Total Compromisso</p>
+                        <h3 id="kpi-total-compromisso" class="text-base font-black text-slate-800 mt-0.5">R$ 0,00</h3>
+                        <p id="kpi-compromisso-pct" class="text-[10px] text-indigo-600 font-bold mt-0.5">0% da meta</p>
+                    </div>
+                </div>
+
+                <!-- Card Total Recebido/Pago -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3 hover:translate-y-[-2px] transition-transform duration-200">
+                    <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600 shrink-0">
+                        <i class="fa-solid fa-hand-holding-dollar text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Total Arrecadado</p>
+                        <h3 id="kpi-raised-value" class="text-base font-black text-slate-800 mt-0.5">R$ 0,00</h3>
+                        <p id="kpi-raised-pct" class="text-[10px] text-emerald-600 font-bold mt-0.5">0% atingido</p>
+                    </div>
+                </div>
+
+                <!-- Card Total de Membros (B2 da Página 1) -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3 hover:translate-y-[-2px] transition-transform duration-200">
+                    <div class="p-3 bg-teal-50 rounded-xl text-teal-600 shrink-0">
+                        <i class="fa-solid fa-church text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Membros da Igreja</p>
+                        <h3 id="kpi-total-members" class="text-base font-black text-slate-800 mt-0.5">0</h3>
+                        <p id="kpi-members-compare" class="text-[10px] text-teal-700 font-bold mt-0.5">B2 (Pág. 1)</p>
+                    </div>
+                </div>
+
+                <!-- Card Meta de Pessoas -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3 hover:translate-y-[-2px] transition-transform duration-200">
+                    <div class="p-3 bg-blue-50 rounded-xl text-blue-600 shrink-0">
+                        <i class="fa-solid fa-users-viewfinder text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Meta Engajamento</p>
+                        <h3 id="kpi-target-people" class="text-base font-black text-slate-800 mt-0.5">0</h3>
+                        <p class="text-[10px] text-blue-600 font-semibold mt-0.5"><i class="fa-solid fa-users mr-1"></i>Soma B7:B10</p>
+                    </div>
+                </div>
+
+                <!-- Card Pessoas Comprometidas Atuais -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3 hover:translate-y-[-2px] transition-transform duration-200">
+                    <div class="p-3 bg-purple-50 rounded-xl text-purple-600 shrink-0">
+                        <i class="fa-solid fa-user-check text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Aderiram à Campanha</p>
+                        <h3 id="kpi-active-people" class="text-base font-black text-slate-800 mt-0.5">0</h3>
+                        <p id="kpi-people-pct" class="text-[10px] text-purple-600 font-bold mt-0.5">0% da meta</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Termômetros Visuais do Compromisso -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Termômetro 1: Financeiro -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">Termômetro Financeiro</h3>
+                                <p class="text-[11px] text-slate-400">Acompanhamento do valor comprometido vs meta total</p>
+                            </div>
+                            <span id="term-fin-pct" class="text-2xl font-black text-emerald-600">0%</span>
+                        </div>
+                        
+                        <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden mb-4 border border-slate-200/50">
+                            <div id="term-fin-bar" class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50 text-xs">
+                        <div>
+                            <span class="text-slate-400 block font-medium">Falta comprometer</span>
+                            <span id="term-fin-remaining" class="text-slate-700 font-bold text-sm">R$ 0,00</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 block font-medium">Total Arrecadado (Pago)</span>
+                            <span id="term-fin-pledged" class="text-emerald-700 font-bold text-sm">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Termômetro 2: Engajamento de Membros -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">Termômetro de Engajamento</h3>
+                                <p class="text-[11px] text-slate-400">Pessoas que aderiram à campanha vs meta de mobilização</p>
+                            </div>
+                            <span id="term-people-pct" class="text-2xl font-black text-purple-600">0%</span>
+                        </div>
+                        
+                        <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden mb-4 border border-slate-200/50">
+                            <div id="term-people-bar" class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50 text-xs">
+                        <div>
+                            <span class="text-slate-400 block font-medium">Falta engajar</span>
+                            <span id="term-people-remaining" class="text-slate-700 font-bold text-sm">0 pessoas</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-slate-400 block font-medium">Total de Participantes (Pág. 2)</span>
+                            <span id="term-people-total" class="text-purple-700 font-bold text-sm">0 pessoas</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Gráficos de Arrecadação -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Evolução das Contribuições Recebidas -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Acompanhamento dos Lançamentos</h3>
+                            <p class="text-[11px] text-slate-400">Valores pagos acumulados e ordenados por data</p>
+                        </div>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Divisão de Status dos Compromissos -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1">Status das Contribuições</h3>
+                        <p class="text-[11px] text-slate-400 mb-6">Divisão das pessoas por situação do compromisso</p>
+                        
+                        <div class="h-44 relative flex justify-center">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="status-legend" class="space-y-2 mt-4 pt-4 border-t border-slate-50">
+                        <!-- Injetado dinamicamente via JS -->
+                    </div>
+                </div>
+
+                <!-- Divisão Membros vs Não Membros -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1">Perfil de Membresia</h3>
+                        <p class="text-[11px] text-slate-400 mb-6">Membros vs. Não Membros (Pág. 2 Col. B)</p>
+                        
+                        <div class="h-44 relative flex justify-center">
+                            <canvas id="membershipChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="membership-legend" class="space-y-2 mt-4 pt-4 border-t border-slate-50">
+                        <!-- Injetado dinamicamente via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mural de Gratidão -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">Mural de Gratidão</h3>
+                        <p class="text-[11px] text-slate-400">Últimos compromissos registrados na campanha</p>
+                    </div>
+                    <button onclick="switchTab('pledges')" class="text-xs font-bold text-emerald-700 hover:text-emerald-950 transition-colors">
+                        Ver todos <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="recent-pledges-grid">
+                    <!-- Gerado Dinamicamente -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= ABA 2: COMPROMISSOS (PÁGINA 2) ================= -->
+        <div id="tab-content-pledges" class="tab-content hidden space-y-6">
+            
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Detalhamento dos Compromissos (Página 2)</h3>
+                        <p class="text-xs text-slate-400">Lista de pessoas que realizaram compromissos financeiros para a reforma</p>
+                    </div>
+                    
+                    <!-- Filtros e Busca -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="relative w-full sm:w-64">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                                <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                            </span>
+                            <input type="text" id="pledge-search" placeholder="Buscar doador..." class="pl-9 pr-4 py-2 w-full text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white transition-all" oninput="filterPledges()">
+                        </div>
+                        
+                        <select id="pledge-filter-status" class="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white transition-all" onchange="filterPledges()">
+                            <option value="all">Todos os Status</option>
+                            <option value="pago">Pago integralmente</option>
+                            <option value="parcial">Parcial / Em aberto</option>
+                            <option value="pendente">Pendente</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabela de Pessoas Comprometidas -->
+                <div class="overflow-x-auto rounded-xl border border-slate-100">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                                <th class="py-4 px-6">Nome / Família</th>
+                                <th class="py-4 px-6">Vínculo</th>
+                                <th class="py-4 px-6">Parcela Comprometida</th>
+                                <th class="py-4 px-6">Valor Pago</th>
+                                <th class="py-4 px-6">Data Lançamento</th>
+                                <th class="py-4 px-6 text-center">Situação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pledges-table-body" class="text-sm text-slate-700 divide-y divide-slate-100">
+                            <!-- Injetado dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex items-center justify-between mt-4 text-xs text-slate-500">
+                    <span id="pledge-showing-count">Mostrando 0 de 0 registros</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= ABA 3: METAS POR CATEGORIA (PÁGINA 1) ================= -->
+        <div id="tab-content-categories" class="tab-content hidden space-y-6">
+            
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="mb-6">
+                    <h3 class="text-base font-bold text-slate-800">Divisão de Metas de Arrecadação (Página 1)</h3>
+                    <p class="text-xs text-slate-400">Valores e pessoas esperadas por categoria de contribuição (Linhas 7 a 10, Colunas B, C e D)</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="categories-grid">
+                    <!-- Injetado Dinamicamente -->
+                </div>
+
+                <!-- Resumo Geral da Estrutura -->
+                <div class="mt-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <h4 class="text-sm font-bold text-slate-800 mb-3"><i class="fa-solid fa-circle-info text-emerald-700 mr-2"></i>Como é feita a apuração dos dados?</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Nossos indicadores consolidados são gerados automaticamente a partir da planilha de controle. O painel lê as metas estipuladas por categoria diretamente na <strong>Página 1</strong> do Excel (linhas 7 a 10) e faz o batimento contra os dados de contribuição real lançados para cada pessoa na <strong>Página 2</strong>. Isso garante total transparência financeira e precisão estatística para a comissão da reforma e para toda a igreja.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= ABA 4: SIMULADOR E PIX ================= -->
+        <div id="tab-content-simulator" class="tab-content hidden space-y-6">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Calculadora de Equivalência -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800 mb-1">Simulador de Ofertas Solidárias</h3>
+                        <p class="text-xs text-slate-400 mb-6">Veja o quanto a sua contribuição ajuda na aquisição de materiais para a nossa reforma!</p>
+                        
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2" for="sim-input-val">Selecione ou digite um valor de oferta</label>
+                                
+                                <div class="grid grid-cols-4 gap-2 mb-3">
+                                    <button onclick="setSimValue(50)" class="py-2.5 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-800 border border-slate-200 rounded-xl text-xs font-bold transition-all">R$ 50</button>
+                                    <button onclick="setSimValue(100)" class="py-2.5 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-800 border border-slate-200 rounded-xl text-xs font-bold transition-all">R$ 100</button>
+                                    <button onclick="setSimValue(250)" class="py-2.5 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-800 border border-slate-200 rounded-xl text-xs font-bold transition-all">R$ 250</button>
+                                    <button onclick="setSimValue(500)" class="py-2.5 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-800 border border-slate-200 rounded-xl text-xs font-bold transition-all">R$ 500</button>
+                                </div>
+                                
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold">R$</span>
+                                    <input type="number" id="sim-input-val" value="100" min="1" step="5" class="pl-9 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-bold" oninput="calculateEquivalence()">
+                                </div>
+                            </div>
+
+                            <!-- Equivalência Real -->
+                            <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Sua doação equivale aproximadamente a:</h4>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div class="bg-white p-3 rounded-xl border border-slate-200/55 text-center flex flex-col justify-center items-center">
+                                        <span class="text-2xl text-amber-600 mb-1"><i class="fa-solid fa-hard-hat"></i></span>
+                                        <span id="eq-cement" class="text-base font-extrabold text-slate-800">2</span>
+                                        <span class="text-[10px] text-slate-400 font-medium">Sacos de Cimento</span>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-xl border border-slate-200/55 text-center flex flex-col justify-center items-center">
+                                        <span class="text-2xl text-emerald-600 mb-1"><i class="fa-solid fa-paint-roller"></i></span>
+                                        <span id="eq-paint" class="text-base font-extrabold text-slate-800">0.5</span>
+                                        <span class="text-[10px] text-slate-400 font-medium">Galão de Tinta</span>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-xl border border-slate-200/55 text-center flex flex-col justify-center items-center">
+                                        <span class="text-2xl text-blue-600 mb-1"><i class="fa-solid fa-border-all"></i></span>
+                                        <span id="eq-tile" class="text-base font-extrabold text-slate-800">1.2</span>
+                                        <span class="text-[10px] text-slate-400 font-medium">m² de Revestimento</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-center text-slate-400 italic mt-6">"Cada um contribua segundo propôs no seu coração, não com tristeza ou por necessidade..." - 2 Coríntios 9:7</p>
+                </div>
+
+                <!-- QR Code e Formas de Contribuição -->
+                <div class="bg-gradient-to-br from-emerald-900 to-emerald-950 rounded-2xl p-6 shadow-sm border border-emerald-800 text-white flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] bg-emerald-800 border border-emerald-700 font-bold px-2 py-1 rounded-md uppercase tracking-widest text-emerald-300">Como Contribuir?</span>
+                        <h3 class="text-lg font-bold text-white mt-3">Faça Parte Desta História</h3>
+                        <p class="text-xs text-emerald-100/80 mt-1">Sua contribuição ajudará na realização desse lindo projeto de restauração da nossa igreja.</p>
+                    </div>
+
+                    <div class="my-6 flex flex-col sm:flex-row items-center gap-6 bg-white/5 p-4 rounded-xl border border-white/10">
+                        <div class="bg-white p-2.5 rounded-lg w-28 h-28 flex items-center justify-center shadow-md">
+                            <!-- QR Code fictício em SVG -->
+                            <svg class="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 5h30v30H5V5zm4 4v22h22V9H9zm51-4h30v30H60V5zm4 4v22h22V9H64zM5 60h30v30H5V60zm4 4v22h22V64H9zm64-4h8v8h-8v-8zm13 8h8v8h-8v-8zm-13 10h8v8h-8v-8zm13 4h8v8h-8v-8zm-26-6h8v8h-8v-8zm0 10h8v8h-8v-8zm10-10h8v8h-8v-8zm0 10h8v8h-8v-8z" fill="#10b981"/>
+                                <rect x="42" y="42" width="16" height="16" rx="2" fill="#059669"/>
+                            </svg>
+                        </div>
+                        <div class="space-y-2 text-left w-full sm:w-auto font-sans">
+                            <h4 class="text-sm font-bold text-emerald-300"><i class="fa-brands fa-pix mr-1"></i> Chave PIX da Reforma</h4>
+                            <p class="text-xs font-mono bg-emerald-950/80 px-3 py-2.5 rounded-lg border border-emerald-800 flex items-center justify-between gap-2 overflow-x-auto">
+                                <span id="pix-key">contato@igrejadoscentenario.org.br</span>
+                                <button onclick="copyPixKey()" class="text-emerald-400 hover:text-emerald-200 transition-colors" title="Copiar Chave Pix">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </p>
+                            <p class="text-[10px] text-emerald-200/60"><i class="fa-solid fa-circle-info"></i> Envie o comprovante para a Tesouraria identificando "REFORMA FACHADA".</p>
+                        </div>
+                    </div>
+
+                    <div class="text-[11px] text-emerald-200/50 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved"></i> Prestação de contas semanal apresentada em boletim oficial.
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-xs mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+            <div>
+                <p class="font-bold text-slate-200">Igreja Presbiteriana do Centenário</p>
+                <p class="text-[11px] mt-0.5">"O Senhor ama a quem dá com alegria.” (2 Coríntios 9:7)</p>
+            </div>
+            <div>
+                <p>© 2026 IPC Centenário. Desenvolvido para transparência e gestão de fé.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script de Processamento Técnico -->
+    <script>
+        let isExported = false;
+        let campaignData = {
+            targetValue: 0,       // Meta financeira (C7:C10 na Página 1)
+            targetPeople: 0,      // Meta de pessoas (B7:B10 na Página 1)
+            totalChurchMembers: 0, // Total de membros na célula B2 (Página 1)
+            totalCompromisso: 0,  // Soma das colunas Z, AA, AB e AC da Página 2
+            categoriesBreakdown: [], // Divisão das metas lidas da Pág 1
+            pledgesList: [],      // Pessoas comprometidas lidas da Pág 2
+            totalPledgedValue: 0, // Somatório dos valores comprometidos na Pág 2
+            totalPaidValue: 0,    // Somatório dos valores pagos na Pág 2
+            totalActivePeople: 0,  // Quantidade de pessoas comprometidas na Pág 2
+            memberStats: { members: 0, nonMembers: 0 } // Estatísticas Membro vs Não Membro (Pág 2)
+        };
+
+        let evolutionChartInstance = null;
+        let statusChartInstance = null;
+        let membershipChartInstance = null;
+
+        window.onload = function() {
+            // Verifica se há ID do Google Sheets salvo anteriormente
+            const savedGSheetId = localStorage.getItem('ipc_gsheet_id');
+            if (savedGSheetId) {
+                document.getElementById('gsheet-url').value = `https://docs.google.com/spreadsheets/d/${savedGSheetId}`;
+                document.getElementById('btn-disconnect-cloud').classList.remove('hidden');
+                syncGoogleSheet();
+            } else if (!isExported) {
+                loadMockData();
+            } else {
+                processAndRenderData();
+                document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-emerald-100 text-emerald-900 px-3 py-2.5 rounded-lg border border-emerald-200 font-semibold";
+                document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> Visualizando dados consolidados exportados da campanha da IPC.`;
+                logDiagnostic("Iniciado com sucesso a partir de arquivo offline exportado.", "success");
+            }
+            calculateEquivalence();
+        };
+
+        // Altera abas do configurador (Cloud vs Arquivo Local)
+        function switchImporterTab(tabType) {
+            document.getElementById('importer-tab-cloud').className = "px-4 py-2 text-xs font-bold border-b-2 " + (tabType === 'cloud' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-400 hover:text-slate-600') + " flex items-center gap-1.5 transition-all";
+            document.getElementById('importer-tab-local').className = "px-4 py-2 text-xs font-bold border-b-2 " + (tabType === 'local' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-400 hover:text-slate-600') + " flex items-center gap-1.5 transition-all";
+            
+            if (tabType === 'cloud') {
+                document.getElementById('importer-content-cloud').classList.remove('hidden');
+                document.getElementById('importer-content-local').classList.add('hidden');
+            } else {
+                document.getElementById('importer-content-cloud').classList.add('hidden');
+                document.getElementById('importer-content-local').classList.remove('hidden');
+            }
+        }
+
+        // Extrai o ID único de uma URL do Google Planilhas
+        function extractSheetId(url) {
+            const matches = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            return matches ? matches[1] : url.trim();
+        }
+
+        // Sincroniza dinamicamente puxando a planilha do Google Sheets via Fetch em formato Excel (Ignorando CORS pelo proxy corsproxy.io)
+        async function syncGoogleSheet() {
+            const inputVal = document.getElementById('gsheet-url').value;
+            const sheetId = extractSheetId(inputVal);
+
+            if (!sheetId) {
+                showNotification("Por favor, cole um link ou ID válido do Google Planilhas.", "error");
+                return;
+            }
+
+            // URL com desvio de CORS para permitir a leitura direta pelo navegador
+            const exportUrl = `https://corsproxy.io/?url=https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+
+            document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-amber-50 text-amber-800 px-3 py-2.5 rounded-lg border border-amber-100";
+            document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Conectando à nuvem Google Sheets...`;
+            
+            document.getElementById('diagnostics-panel').innerHTML = '';
+            logDiagnostic(`Iniciando conexão com Google Planilhas através do túnel corsproxy.io. ID: "${sheetId}"`);
+
+            try {
+                const response = await fetch(exportUrl);
+                if (!response.ok) {
+                    throw new Error("Não foi possível acessar a planilha. Confirme se as configurações de compartilhamento estão como 'Qualquer pessoa com o link' em modo 'Leitor'.");
+                }
+
+                const arrayBuffer = await response.arrayBuffer();
+                const data = new Uint8Array(arrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                logDiagnostic("Download de arquivo em nuvem concluído com sucesso. Iniciando processamento do documento.");
+                
+                // Processa o Workbook baixado
+                processWorkbook(workbook, "Google Planilhas");
+
+                // Salva no localStorage para auto-atualizar nas próximas visitas
+                localStorage.setItem('ipc_gsheet_id', sheetId);
+                document.getElementById('btn-disconnect-cloud').classList.remove('hidden');
+
+                document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-emerald-100 text-emerald-900 px-3 py-2.5 rounded-lg border border-emerald-200 font-semibold";
+                document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-cloud text-emerald-600"></i> Conectado e Sincronizado automaticamente ao Google Sheets!`;
+                
+                showNotification("Sincronizado com o Google Sheets!", "success");
+
+                setTimeout(() => {
+                    toggleImporter();
+                }, 1200);
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-red-50 text-red-800 px-3 py-2.5 rounded-lg border border-red-100";
+                document.getElementById('data-status-text').innerText = "Erro ao acessar a planilha online. Verifique se o compartilhamento está público.";
+                
+                logDiagnostic(`Erro na conexão online: ${error.message}`, 'error');
+                showNotification("Erro na conexão com Google Planilhas. Verifique o compartilhamento.", "error");
+            }
+        }
+
+        // Desconecta e remove a sincronização do Google Sheets
+        function disconnectGoogleSheet() {
+            localStorage.removeItem('ipc_gsheet_id');
+            document.getElementById('gsheet-url').value = '';
+            document.getElementById('btn-disconnect-cloud').classList.add('hidden');
+            logDiagnostic("Conexão com Google Planilhas desfeita.");
+            showNotification("Conexão de nuvem removida.", "info");
+            loadMockData();
+        }
+
+        // Função para exportar o HTML completo já pré-configurado com os dados atuais
+        function exportHTML() {
+            logDiagnostic("Iniciando processo de geração de arquivo exportável...");
+            
+            let source = document.documentElement.outerHTML;
+            let fullHTMLFile = "<!DOCTYPE html>\n" + source;
+
+            const dataToInject = JSON.stringify(campaignData, null, 4);
+
+            const originalDataRegex = /let campaignData = \{[\s\S]*?\};/;
+            const replacementData = `let campaignData = ${dataToInject};`;
+            
+            fullHTMLFile = fullHTMLFile.replace(originalDataRegex, replacementData);
+            fullHTMLFile = fullHTMLFile.replace("let isExported = false;", "let isExported = true;");
+
+            try {
+                const blob = new Blob([fullHTMLFile], { type: "text/html;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                
+                const dateSuffix = new Date().toISOString().slice(0, 10).replace(/-/g, '_');
+                const downloadLink = document.createElement("a");
+                downloadLink.href = url;
+                downloadLink.download = `Painel_Campanha_Reforma_IPC_${dateSuffix}.html`;
+                
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(url);
+                
+                logDiagnostic("Arquivo HTML exportado com êxito!", "success");
+                showNotification("Seu painel completo foi exportado! Você pode abri-lo de forma independente em qualquer dispositivo.", "success");
+            } catch (err) {
+                logDiagnostic(`Erro ao tentar exportar arquivo: ${err.message}`, "error");
+                showNotification("Ocorreu um erro ao exportar o painel.", "error");
+            }
+        }
+
+        // Função para ocultar ou exibir a seção do leitor da planilha IPC
+        function toggleImporter() {
+            const content = document.getElementById('importer-content');
+            const icon = document.getElementById('icon-toggle-importer');
+            const text = document.getElementById('text-toggle-importer');
+            const badge = document.getElementById('badge-importer-status');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.className = "fa-solid fa-chevron-up transition-transform duration-200";
+                text.innerText = "Ocultar Configuração";
+                badge.innerText = "Ativo";
+                badge.className = "text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium";
+            } else {
+                content.classList.add('hidden');
+                icon.className = "fa-solid fa-chevron-down transition-transform duration-200";
+                text.innerText = "Mostrar Configuração";
+                badge.innerText = "Oculto";
+                badge.className = "text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium border border-amber-100";
+            }
+        }
+
+        function toggleDiagnostics() {
+            const panel = document.getElementById('diagnostics-panel');
+            const icon = document.getElementById('diag-toggle-icon');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                icon.className = "fa-solid fa-chevron-up";
+            } else {
+                panel.classList.add('hidden');
+                icon.className = "fa-solid fa-chevron-down";
+            }
+        }
+
+        function logDiagnostic(message, type = 'info') {
+            const panel = document.getElementById('diagnostics-panel');
+            
+            if (panel.innerHTML.includes('Nenhum diagnóstico gerado')) {
+                panel.innerHTML = '';
+            }
+
+            const timestamp = new Date().toLocaleTimeString();
+            let color = 'text-slate-600';
+            let prefix = '⚙️ [SISTEMA]';
+
+            if (type === 'success') { color = 'text-emerald-600 font-semibold'; prefix = '✅ [OK]'; }
+            else if (type === 'warn') { color = 'text-amber-600 font-semibold'; prefix = '⚠️ [AVISO]'; }
+            else if (type === 'error') { color = 'text-red-600 font-bold'; prefix = '❌ [ERRO]'; }
+
+            panel.innerHTML += `<div class="${color} py-0.5">[${timestamp}] ${prefix} ${message}</div>`;
+            panel.scrollTop = panel.scrollHeight;
+        }
+
+        function parsePortugueseNumber(val) {
+            if (val === undefined || val === null) return 0;
+            if (typeof val === 'number') return val;
+            
+            let str = String(val).trim();
+            if (!str) return 0;
+
+            str = str.replace(/R\$\s*/g, '').replace(/[\s]/g, '');
+
+            if (str.includes(',') && str.includes('.')) {
+                str = str.replace(/\./g, '').replace(/,/g, '.');
+            } else if (str.includes(',')) {
+                str = str.replace(/,/g, '.');
+            } else if (str.includes('.')) {
+                const parts = str.split('.');
+                if (parts[parts.length - 1].length === 3) {
+                    str = str.replace(/\./g, '');
+                }
+            }
+
+            str = str.replace(/[^\d.-]/g, '');
+            const parsed = parseFloat(str);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === 'success' ? 'bg-emerald-800 border-emerald-700' : 
+                            type === 'error' ? 'bg-red-800 border-red-700' : 'bg-slate-800 border-slate-700';
+            const icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 
+                         type === 'error' ? 'fa-circle-xmark text-red-400' : 'fa-circle-info text-blue-400';
+
+            toast.className = `flex items-center gap-3 text-white text-xs font-semibold px-4 py-3 rounded-xl border shadow-lg mb-2 transition-all duration-300 transform translate-y-2 opacity-0 ${bgColor}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-base"></i>
+                <div class="flex-grow">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-white/60 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200";
+            });
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-emerald-600 text-white shadow-md";
+            }
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function formatDate(excelDate) {
+            if (!excelDate) return 'S/D';
+            
+            if (typeof excelDate === 'number') {
+                try {
+                    const date = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
+                    const day = String(date.getUTCDate()).padStart(2, '0');
+                    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                    const year = date.getUTCFullYear();
+                    return `${day}/${month}/${year}`;
+                } catch(err) {
+                    return String(excelDate);
+                }
+            }
+
+            let str = String(excelDate).trim();
+            if (str.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const parts = str.split('-');
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return str;
+        }
+
+        function copyPixKey() {
+            const pixKey = document.getElementById('pix-key').innerText;
+            const tempInput = document.createElement('input');
+            tempInput.value = pixKey;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showNotification('Chave PIX copiada para a área de transferência!', 'success');
+        }
+
+        function loadMockData() {
+            logDiagnostic("Carregando banco de dados de demonstração padrão...");
+            
+            campaignData.totalChurchMembers = 140; // Simulado da célula B2 (Pág. 1)
+            campaignData.totalCompromisso = 45500.00; // Simulado das colunas Z, AA, AB, AC da Página 2
+
+            campaignData.categoriesBreakdown = [
+                { category: "Classe Ouro (Grandes Contribuintes)", targetPeople: 22, targetValue: 22000.00, confirmedPeople: 2 },
+                { category: "Classe Prata (Doações Médias)", targetPeople: 50, targetValue: 25000.00, confirmedPeople: 2 },
+                { category: "Classe Bronze (Contribuições Simples)", targetPeople: 30, targetValue: 9000.00, confirmedPeople: 1 },
+                { category: "Parcerias e Coleta de Eventos", targetPeople: 20, targetValue: 4000.00, confirmedPeople: 1 }
+            ];
+
+            campaignData.pledgesList = [
+                { nome: 'Família Albuquerque Sampaio', comprometido: 5000.00, pago: 5000.00, status: 'Pago', data: '12/03/2026', tipoMembro: 'Membro' },
+                { nome: 'Presbítero Antônio Neves', comprometido: 2000.00, pago: 1000.00, status: 'Parcial', data: '15/03/2026', tipoMembro: 'Membro' },
+                { nome: 'Augusta Vieira de Melo', comprometido: 500.00, pago: 500.00, status: 'Pago', data: '22/03/2026', tipoMembro: 'Membro' },
+                { nome: 'Família Pereira Guimarães', comprometido: 10000.00, pago: 4000.00, status: 'Parcial', data: '02/04/2026', tipoMembro: 'Membro' },
+                { nome: 'Diácono Lucas Medeiros', comprometido: 1500.00, pago: 1500.00, status: 'Pago', data: '08/04/2026', tipoMembro: 'Membro' },
+                { nome: 'Carlos Eduardo Ramos', comprometido: 3000.00, pago: 0.00, status: 'Pendente', data: '15/04/2026', tipoMembro: 'Não Membro' },
+                { nome: 'Classe de EBD Unitas', comprometido: 4500.00, pago: 4500.00, status: 'Pago', data: '25/04/2026', tipoMembro: 'Membro' },
+                { nome: 'Mariana & Rogério Coutinho', comprometido: 2500.00, pago: 1250.00, status: 'Parcial', data: '29/04/2026', tipoMembro: 'Não Membro' },
+                { nome: 'Família Silva Ramos', comprometido: 1000.00, pago: 1000.00, status: 'Pago', data: '05/05/2026', tipoMembro: 'Membro' },
+                { nome: 'Pastor Cláudio de Souza', comprometido: 3000.00, pago: 3000.00, status: 'Pago', data: '10/05/2026', tipoMembro: 'Membro' },
+                { nome: 'Grupo de Homens IPC', comprometido: 8000.00, pago: 4000.00, status: 'Parcial', data: '20/05/2026', tipoMembro: 'Membro' },
+                { nome: 'Família Nogueira Costa', comprometido: 1200.00, pago: 1200.00, status: 'Pago', data: '22/05/2026', tipoMembro: 'Não Membro' }
+            ];
+
+            campaignData.targetValue = campaignData.categoriesBreakdown.reduce((sum, item) => sum + item.targetValue, 0);
+            campaignData.targetPeople = campaignData.categoriesBreakdown.reduce((sum, item) => sum + item.targetPeople, 0);
+
+            document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg border border-emerald-100";
+            document.getElementById('data-status-text').innerText = "Visualizando dados de demonstração integrados. Insira seu arquivo Excel para atualizar.";
+            
+            logDiagnostic("Soma da meta padrão (C7:C10): " + formatCurrency(campaignData.targetValue), "success");
+            logDiagnostic("Pessoas alvo padrão (B7:B10): " + campaignData.targetPeople + " membros", "success");
+            
+            processAndRenderData();
+        }
+
+        // Processamento Centralizado da Pasta de Trabalho do Excel (Compartilhado entre Cloud e local)
+        function processWorkbook(workbook, sourceName) {
+            let sheet1Name = workbook.SheetNames[0];
+            let sheet2Name = workbook.SheetNames[1];
+
+            workbook.SheetNames.forEach((name, idx) => {
+                const lowName = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (lowName.includes("compromisso") || lowName.includes("detalhe") || lowName.includes("doador") || lowName.includes("pessoa") || lowName.includes("lista") || lowName.includes("pagamento")) {
+                    sheet2Name = name;
+                } else if (lowName.includes("meta") || lowName.includes("resumo") || lowName.includes("categoria") || lowName.includes("geral") || lowName.includes("faixa")) {
+                    sheet1Name = name;
+                }
+            });
+
+            logDiagnostic(`Selecionada para Metas (Página 1): "${sheet1Name}"`);
+            logDiagnostic(`Selecionada para Lançamentos (Página 2): "${sheet2Name}"`);
+
+            // -----------------------------------------------------------------
+            // PROCESSANDO ABA 1 (METAS - Linhas 7 a 10, B2 e nova Coluna D)
+            // -----------------------------------------------------------------
+            const sheet1 = workbook.Sheets[sheet1Name];
+            const s1Rows = XLSX.utils.sheet_to_json(sheet1, { header: 1, raw: true });
+            
+            logDiagnostic(`Aba 1 carregada. Total de linhas detectadas: ${s1Rows.length}`);
+
+            // Procura inteligente da Quantidade de Membros (Célula B2 ou linha contendo 'QTD MEMBRO')
+            let excelChurchMembers = 0;
+            for (let r = 0; r < s1Rows.length; r++) {
+                const row = s1Rows[r];
+                if (row && row[0]) {
+                    const colA = String(row[0]).toLowerCase();
+                    if (colA.includes('qtd membro') || (colA.includes('membro') && (colA.includes('qtd') || colA.includes('quantidade')))) {
+                        excelChurchMembers = parseInt(String(row[1]).replace(/[^\d]/g, '')) || 0;
+                        logDiagnostic(`Total de Membros da Igreja localizado na linha ${r+1}: ${excelChurchMembers}`, "success");
+                        break;
+                    }
+                }
+            }
+
+            if (!excelChurchMembers && s1Rows[1] && s1Rows[1][1]) {
+                excelChurchMembers = parseInt(String(s1Rows[1][1]).replace(/[^\d]/g, '')) || 0;
+                logDiagnostic(`Fallback: Lido ${excelChurchMembers} membros diretamente da célula B2.`, "info");
+            }
+
+            if (!excelChurchMembers) {
+                excelChurchMembers = 140;
+                logDiagnostic(`Aviso: Qtd de Membros não localizado em B2 na Página 1. Usando valor padrão 140.`, "warn");
+            }
+
+            let s1HeaderIdx = -1;
+            for (let i = 0; i < s1Rows.length; i++) {
+                const row = s1Rows[i];
+                if (!row) continue;
+                const rowText = row.map(cell => String(cell || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+                
+                if (rowText.includes('descricao') || rowText.includes('qt pessoas') || rowText.includes('valor previst')) {
+                    s1HeaderIdx = i;
+                    break;
+                }
+            }
+
+            if (s1HeaderIdx === -1) {
+                logDiagnostic(`Aviso: Cabeçalhos específicos de metas não encontrados na Página 1. Usando padrão (Linha 6 / Índice 5 do Excel).`, `warn`);
+                s1HeaderIdx = 5;
+            } else {
+                logDiagnostic(`Linha de metas da Página 1 identificada dinamicamente: Linha ${s1HeaderIdx + 1}`);
+            }
+
+            let parsedCategories = [];
+            let sumTargetValue = 0;
+            let sumTargetPeople = 0;
+
+            for (let i = s1HeaderIdx + 1; i <= s1HeaderIdx + 4; i++) {
+                const row = s1Rows[i] || [];
+                const categoryName = row[0] ? String(row[0]).trim() : `Categoria sem nome (Linha ${i + 1})`;
+                
+                const rawB = row[1];
+                const rawC = row[2];
+                const rawD = row[3]; // Nova Coluna D (Índice 3 do XLSX) para QT CONFIRMADA
+
+                const peopleGoal = rawB !== undefined ? parseInt(String(rawB).replace(/[^\d]/g, '')) || 0 : 0;
+                const valueGoal = parsePortugueseNumber(rawC);
+                const confirmedPeople = rawD !== undefined ? parseInt(String(rawD).replace(/[^\d]/g, '')) || 0 : 0;
+
+                sumTargetPeople += peopleGoal;
+                sumTargetValue += valueGoal;
+
+                logDiagnostic(`Meta Lida [Linha ${i + 1}]: "${categoryName}" | Pessoas Alvo: ${peopleGoal} | Valor Previsto: ${formatCurrency(valueGoal)} | Pessoas Confirmadas (Col D): ${confirmedPeople}`, 'success');
+
+                parsedCategories.push({
+                    category: categoryName,
+                    targetPeople: peopleGoal,
+                    targetValue: valueGoal,
+                    confirmedPeople: confirmedPeople
+                });
+            }
+
+            // -----------------------------------------------------------------
+            // PROCESSANDO ABA 2 (DETALHES DOS COMPROMISSOS & SUM COL Z,AA,AB,AC)
+            // -----------------------------------------------------------------
+            const sheet2 = workbook.Sheets[sheet2Name];
+            const s2Rows = XLSX.utils.sheet_to_json(sheet2, { header: 1, raw: true });
+            
+            logDiagnostic(`Aba 2 carregada. Total de linhas detectadas: ${s2Rows.length}`);
+
+            let headerRowIdx = -1;
+            for (let i = 0; i < s2Rows.length; i++) {
+                const row = s2Rows[i];
+                if (!row) continue;
+                const rowText = row.map(cell => String(cell || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+                
+                const hasDoador = rowText.some(t => t.includes('nome') || t.includes('doador') || t.includes('participante') || t.includes('membro') || t.includes('familia') || t.includes('persona') || t.includes('pessoa'));
+                const hasValor = rowText.some(t => t.includes('comprometido') || t.includes('prometido') || t.includes('compromisso') || t.includes('valor') || t.includes('pago') || t.includes('paga'));
+
+                if (hasDoador && hasValor) {
+                    headerRowIdx = i;
+                    break;
+                }
+            }
+
+            if (headerRowIdx === -1) {
+                logDiagnostic(`Aviso: Cabeçalhos não encontrados na Página 2. Assumindo início na primeira linha de dados.`, `warn`);
+                for (let i = 0; i < s2Rows.length; i++) {
+                    if (s2Rows[i] && s2Rows[i].length > 1) {
+                        headerRowIdx = i;
+                        break;
+                    }
+                }
+            } else {
+                logDiagnostic(`Cabeçalho da Página 2 identificado: Linha ${headerRowIdx + 1}`);
+            }
+
+            const headers = s2Rows[headerRowIdx].map(h => String(h || '').toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+            logDiagnostic(`Colunas mapeadas na Página 2: [ ${headers.join(' | ')} ]`);
+
+            let parsedPledges = [];
+            let accumTotalCompromisso = 0; // Somador dinâmico das colunas Z, AA, AB, AC
+
+            for (let i = headerRowIdx + 1; i < s2Rows.length; i++) {
+                const row = s2Rows[i];
+                if (!row || row.length === 0) continue;
+
+                let nome = '';
+                let tipoMembro = 'Membro';
+                let comprometido = row[2] !== undefined ? parsePortugueseNumber(row[2]) : 0; // Coluna C é índice 2
+                let pago = 0;
+                let status = '';
+                let dataLanc = '';
+
+                // Leitura estrita posicional da Coluna B (Índice 1) para membresia, livre de colisão
+                const rawMembrosVal = row[1];
+                if (rawMembrosVal !== undefined && rawMembrosVal !== null) {
+                    let strVal = String(rawMembrosVal).trim();
+                    const lowVal = strVal.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    if (lowVal.includes('nao') || lowVal.includes('visitante') || lowVal.includes('externo') || lowVal.includes('amigo') || lowVal === 'n') {
+                        tipoMembro = 'Não Membro';
+                    } else {
+                        tipoMembro = 'Membro';
+                    }
+                }
+
+                // Mapear colunas dinâmicas restantes
+                headers.forEach((h, colIdx) => {
+                    const val = row[colIdx];
+                    if (val === undefined || val === null) return;
+
+                    if (h.includes('nome') || h.includes('doador') || h.includes('participante') || h.includes('familia') || h.includes('pessoa') || colIdx === 0) {
+                        nome = String(val).trim();
+                    } else if (h.includes('pago') || h.includes('recebido') || h.includes('ja pago') || h.includes('total pago')) {
+                        pago = parsePortugueseNumber(val);
+                    } else if (h.includes('status') || h.includes('situacao') || h.includes('estado')) {
+                        status = String(val).trim();
+                    } else if (h.includes('data') || h.includes('dia') || h.includes('lancamento') || h.includes('registro')) {
+                        dataLanc = formatDate(val);
+                    }
+                });
+
+                // Soma opcional de parcelas mensais se houver colunas 'VALOR MÊS'
+                let sumMonthlyPaid = 0;
+                let hasMonthlyCols = false;
+                headers.forEach((h, colIdx) => {
+                    if (h.includes('valor mes') || h.includes('valor m') || h.includes('valor_mes')) {
+                        hasMonthlyCols = true;
+                        const val = row[colIdx];
+                        if (val !== undefined && val !== null) {
+                            sumMonthlyPaid += parsePortugueseNumber(val);
+                        }
+                    }
+                });
+
+                if (hasMonthlyCols) {
+                    pago = sumMonthlyPaid;
+                }
+
+                if (nome && !nome.toLowerCase().includes('total') && !nome.toLowerCase().includes('soma') && !nome.toLowerCase().includes('resumo')) {
+                    // SOMADOR DAS COLUNAS Z, AA, AB, AC (Índices 25, 26, 27 e 28)
+                    const valZ = row[25] !== undefined ? parsePortugueseNumber(row[25]) : 0;
+                    const valAA = row[26] !== undefined ? parsePortugueseNumber(row[26]) : 0;
+                    const valAB = row[27] !== undefined ? parsePortugueseNumber(row[27]) : 0;
+                    const valAC = row[28] !== undefined ? parsePortugueseNumber(row[28]) : 0;
+                    const rowCompromissoSum = valZ + valAA + valAB + valAC;
+                    accumTotalCompromisso += rowCompromissoSum;
+
+                    logDiagnostic(`Doador "${nome}" (Fila ${i+1}): Coluna B = "${rawMembrosVal}" -> Classificado como: [${tipoMembro}]`, tipoMembro === 'Não Membro' ? 'success' : 'info');
+
+                    if (!status) {
+                        status = pago >= comprometido ? 'Pago' : (pago > 0 ? 'Parcial' : 'Pendente');
+                    }
+                    if (!dataLanc) {
+                        const today = new Date();
+                        dataLanc = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+                    }
+
+                    parsedPledges.push({
+                        nome,
+                        tipoMembro,
+                        comprometido,
+                        pago,
+                        status,
+                        data: dataLanc
+                    });
+                }
+            }
+
+            logDiagnostic(`Total de doadores processados na Página 2: ${parsedPledges.length}`);
+            logDiagnostic(`Soma consolidada de Compromisso (Z+AA+AB+AC): ${formatCurrency(accumTotalCompromisso)}`, 'success');
+
+            if (parsedCategories.length === 0) {
+                throw new Error("Não foi possível ler as metas das linhas 7 a 10 na Página 1.");
+            }
+
+            // Atualizar estado global
+            campaignData.categoriesBreakdown = parsedCategories;
+            campaignData.targetValue = sumTargetValue;
+            campaignData.targetPeople = sumTargetPeople;
+            campaignData.totalChurchMembers = excelChurchMembers;
+            campaignData.totalCompromisso = accumTotalCompromisso;
+            campaignData.pledgesList = parsedPledges;
+
+            processAndRenderData();
+        }
+
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            
+            document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-amber-50 text-amber-800 px-3 py-2.5 rounded-lg border border-amber-100";
+            document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Lendo e processando arquivo local "${file.name}"...`;
+
+            document.getElementById('diagnostics-panel').innerHTML = '';
+            logDiagnostic(`Iniciando a leitura do arquivo local: "${file.name}"`);
+
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    logDiagnostic(`Planilha local lida com sucesso.`);
+                    processWorkbook(workbook, file.name);
+
+                    document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-emerald-100 text-emerald-900 px-3 py-2.5 rounded-lg border border-emerald-200 font-semibold";
+                    document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> Planilha local "${file.name}" importada com sucesso!`;
+                    
+                    showNotification(`Planilha "${file.name}" processada com êxito!`, 'success');
+
+                    setTimeout(() => {
+                        toggleImporter();
+                    }, 1200);
+
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-red-50 text-red-800 px-3 py-2.5 rounded-lg border border-red-100";
+                    document.getElementById('data-status-text').innerText = "Erro crítico ao ler arquivo. Verifique a Central de Diagnóstico.";
+                    logDiagnostic(`Falha na leitura: ${error.message}`, 'error');
+                    showNotification('Falha ao processar arquivo Excel. Verifique a estrutura.', 'error');
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processAndRenderData() {
+            campaignData.totalPaidValue = campaignData.pledgesList.reduce((acc, curr) => acc + Number(curr.pago || 0), 0);
+            campaignData.totalPledgedValue = campaignData.pledgesList.reduce((acc, curr) => acc + Number(curr.comprometido || 0), 0);
+            campaignData.totalActivePeople = campaignData.pledgesList.length;
+
+            if (campaignData.totalCompromisso === 0 && campaignData.totalPledgedValue > 0) {
+                campaignData.totalCompromisso = campaignData.totalPledgedValue * 0.95;
+            }
+
+            // Estatísticas de Membresia (Pág 2 Col B)
+            let countMembros = 0;
+            let countNaoMembros = 0;
+
+            campaignData.pledgesList.forEach(p => {
+                const tipo = p.tipoMembro ? p.tipoMembro.trim().toLowerCase() : '';
+                if (tipo.includes('nao') || tipo.includes('visitante') || tipo.includes('externo')) {
+                    countNaoMembros++;
+                } else {
+                    countMembros++;
+                }
+            });
+
+            campaignData.memberStats = {
+                members: countMembros,
+                nonMembers: countNaoMembros
+            };
+
+            const progressPct = campaignData.targetValue > 0 ? (campaignData.totalPaidValue / campaignData.targetValue) * 100 : 0;
+            const progressCompromissoPct = campaignData.targetValue > 0 ? (campaignData.totalCompromisso / campaignData.targetValue) * 100 : 0;
+            const progressArrecadadoCompromissoPct = campaignData.totalCompromisso > 0 ? (campaignData.totalPaidValue / campaignData.totalCompromisso) * 100 : 0;
+            const peoplePct = campaignData.targetPeople > 0 ? (campaignData.totalActivePeople / campaignData.targetPeople) * 100 : 0;
+            const mobilizationCompare = campaignData.totalChurchMembers > 0 ? ((campaignData.targetPeople / campaignData.totalChurchMembers) * 100) : 0;
+
+            // KPIs do painel superior
+            document.getElementById('kpi-target-value').innerText = formatCurrency(campaignData.targetValue);
+            document.getElementById('kpi-raised-value').innerText = formatCurrency(campaignData.totalPaidValue);
+            document.getElementById('kpi-raised-pct').innerText = `${progressArrecadadoCompromissoPct.toFixed(1)}% do comprometido`;
+            
+            document.getElementById('kpi-total-compromisso').innerText = formatCurrency(campaignData.totalCompromisso);
+            document.getElementById('kpi-compromisso-pct').innerText = `${progressCompromissoPct.toFixed(1)}% da meta`;
+            
+            document.getElementById('kpi-target-people').innerText = campaignData.targetPeople;
+            document.getElementById('kpi-active-people').innerText = campaignData.totalActivePeople;
+            document.getElementById('kpi-people-pct').innerText = `${peoplePct.toFixed(1)}% da meta`;
+
+            document.getElementById('kpi-total-members').innerText = campaignData.totalChurchMembers;
+            document.getElementById('kpi-members-compare').innerText = `Meta planeja ${mobilizationCompare.toFixed(0)}% dos membros`;
+
+            // Termômetro 1 (Financeiro - Comparando Meta Financeira vs Total Compromisso)
+            document.getElementById('term-fin-pct').innerText = `${Math.min(progressCompromissoPct, 100).toFixed(0)}%`;
+            document.getElementById('term-fin-bar').style.width = `${Math.min(progressCompromissoPct, 100)}%`;
+            document.getElementById('term-fin-remaining').innerText = formatCurrency(Math.max(campaignData.targetValue - campaignData.totalCompromisso, 0));
+            document.getElementById('term-fin-pledged').innerText = formatCurrency(campaignData.totalPaidValue);
+
+            // Termômetro 2 (Pessoas)
+            document.getElementById('term-people-pct').innerText = `${Math.min(peoplePct, 100).toFixed(0)}%`;
+            document.getElementById('term-people-bar').style.width = `${Math.min(peoplePct, 100)}%`;
+            const remainingPeople = Math.max(campaignData.targetPeople - campaignData.totalActivePeople, 0);
+            document.getElementById('term-people-remaining').innerText = `${remainingPeople} pessoa${remainingPeople !== 1 ? 's' : ''}`;
+            document.getElementById('term-people-total').innerText = `${campaignData.totalActivePeople} pessoa${campaignData.totalActivePeople !== 1 ? 's' : ''}`;
+
+            renderRecentPledges();
+            renderPledgesTable();
+            renderCategoriesGrid();
+            renderCharts();
+        }
+
+        function renderRecentPledges() {
+            const grid = document.getElementById('recent-pledges-grid');
+            grid.innerHTML = '';
+
+            const pledgesSorted = [...campaignData.pledgesList].sort((a, b) => {
+                const parseDate = (dStr) => {
+                    if (!dStr || dStr === 'S/D') return new Date(0);
+                    const parts = dStr.split('/');
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                };
+                return parseDate(b.data) - parseDate(a.data);
+            });
+
+            const top4 = pledgesSorted.slice(0, 4);
+
+            if (top4.length === 0) {
+                grid.innerHTML = `<div class="col-span-4 text-center text-slate-400 py-6">Nenhum compromisso registrado ainda na Página 2.</div>`;
+                return;
+            }
+
+            top4.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-50 border border-slate-100 hover:border-emerald-200 rounded-xl p-4 transition-all flex flex-col justify-between shadow-sm";
+                
+                const statusBadge = item.status.toLowerCase() === 'pago' ? 
+                    `<span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-md px-1.5 py-0.5">Pago</span>` : 
+                    `<span class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-100 rounded-md px-1.5 py-0.5">${item.status}</span>`;
+
+                div.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold text-slate-400"><i class="fa-regular fa-calendar-days"></i> ${item.data}</span>
+                        ${statusBadge}
+                    </div>
+                    <p class="text-xs font-bold text-slate-800 line-clamp-1" title="${item.nome}">${item.nome}</p>
+                    <div class="mt-2 text-[11px] text-slate-500">
+                        <div>Compromisso: <span class="font-bold text-slate-700">${formatCurrency(item.comprometido)}</span></div>
+                        <div>Recebido: <span class="font-extrabold text-emerald-700">${formatCurrency(item.pago)}</span></div>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function renderPledgesTable(filteredList = null) {
+            const tbody = document.getElementById('pledges-table-body');
+            tbody.innerHTML = '';
+
+            const listToRender = filteredList || campaignData.pledgesList;
+            document.getElementById('pledge-showing-count').innerText = `Mostrando ${listToRender.length} de ${campaignData.pledgesList.length} doadores`;
+
+            if (listToRender.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">Nenhum registro corresponde aos filtros selecionados.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            listToRender.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition-colors border-b border-slate-100";
+
+                let badge = '';
+                const st = p.status.toLowerCase();
+                if (st === 'pago') {
+                    badge = `<span class="px-2 py-1 text-[10px] font-bold rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100"><i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>Pago</span>`;
+                } else if (st === 'parcial' || p.pago > 0) {
+                    badge = `<span class="px-2 py-1 text-[10px] font-bold rounded-md bg-amber-50 text-amber-800 border border-amber-100"><i class="fa-solid fa-hourglass-half text-amber-500 mr-1"></i>Parcial</span>`;
+                } else {
+                    badge = `<span class="px-2 py-1 text-[10px] font-bold rounded-md bg-slate-100 text-slate-600 border border-slate-200"><i class="fa-solid fa-clock text-slate-400 mr-1"></i>Pendente</span>`;
+                }
+
+                const typeBadge = p.tipoMembro === 'Membro' ? 
+                    `<span class="text-[11px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-semibold">Membro</span>` :
+                    `<span class="text-[11px] bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-semibold">Amigo</span>`;
+
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-bold text-slate-800">${p.nome}</td>
+                    <td class="py-4 px-6">${typeBadge}</td>
+                    <td class="py-4 px-6 font-semibold text-slate-600">${formatCurrency(p.comprometido)}</td>
+                    <td class="py-4 px-6 font-bold text-emerald-700">${formatCurrency(p.pago)}</td>
+                    <td class="py-4 px-6 text-xs text-slate-500">${p.data}</td>
+                    <td class="py-4 px-6 text-center">${badge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterPledges() {
+            const query = document.getElementById('pledge-search').value.toLowerCase();
+            const statusFilter = document.getElementById('pledge-filter-status').value;
+
+            const filtered = campaignData.pledgesList.filter(p => {
+                const matchesSearch = p.nome.toLowerCase().includes(query) || (p.tipoMembro && p.tipoMembro.toLowerCase().includes(query));
+                
+                let matchesStatus = true;
+                if (statusFilter === 'pago') {
+                    matchesStatus = p.status.toLowerCase() === 'pago';
+                } else if (statusFilter === 'parcial') {
+                    matchesStatus = p.status.toLowerCase() === 'parcial' || (p.pago > 0 && p.pago < p.comprometido);
+                } else if (statusFilter === 'pendente') {
+                    matchesStatus = p.status.toLowerCase() === 'pendente' || (p.pago === 0 && p.status.toLowerCase() !== 'pago');
+                }
+
+                return matchesSearch && matchesStatus;
+            });
+
+            renderPledgesTable(filtered);
+        }
+
+        function renderCategoriesGrid() {
+            const grid = document.getElementById('categories-grid');
+            grid.innerHTML = '';
+
+            campaignData.categoriesBreakdown.forEach((cat, idx) => {
+                const div = document.createElement('div');
+                div.className = "border border-slate-200 rounded-2xl p-5 hover:shadow-md transition-shadow relative overflow-hidden bg-slate-50/50 flex flex-col justify-between shadow-sm";
+                
+                // Mapeia o progresso do engajamento de pessoas confirmadas vs. esperadas
+                const confirmedVal = cat.confirmedPeople || 0;
+                const targetVal = cat.targetPeople || 1;
+                const engPct = Math.min((confirmedVal / targetVal) * 100, 100);
+
+                div.innerHTML = `
+                    <div>
+                        <div class="absolute top-0 right-0 w-20 h-20 -mt-4 -mr-4 bg-emerald-100/30 rounded-full flex items-center justify-center text-emerald-800 font-extrabold text-[10px]">
+                            FAIXA ${idx + 1}
+                        </div>
+                        <span class="text-[10px] font-bold tracking-wider text-emerald-800 uppercase">GRUPO DE COMPROMISSO</span>
+                        <h4 class="text-sm font-black text-slate-800 mt-2 mb-4 line-clamp-1 pr-6" title="${cat.category}">${cat.category}</h4>
+                    </div>
+                    
+                    <div class="space-y-2 border-t border-slate-200/60 pt-3">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-500">Meta Financeira:</span>
+                            <span class="font-bold text-slate-800">${formatCurrency(cat.targetValue)}</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-500">Meta de Pessoas:</span>
+                            <span class="font-bold text-slate-700">${cat.targetPeople} pessoas</span>
+                        </div>
+                        
+                        <!-- Nova Informação: Pessoas Confirmadas (Coluna D) -->
+                        <div class="flex justify-between text-xs pt-1 border-t border-dashed border-slate-200">
+                            <span class="text-slate-500 font-semibold text-indigo-800">Pessoas Confirmadas:</span>
+                            <span class="font-bold text-indigo-700">${confirmedVal} de ${cat.targetPeople}</span>
+                        </div>
+
+                        <!-- Barra de progresso visual de pessoas confirmadas -->
+                        <div class="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden mt-1 border border-slate-300/30">
+                            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-full rounded-full transition-all duration-1000" style="width: ${engPct}%"></div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function renderCharts() {
+            if (evolutionChartInstance) evolutionChartInstance.destroy();
+            if (statusChartInstance) statusChartInstance.destroy();
+            if (membershipChartInstance) membershipChartInstance.destroy();
+
+            // 1. Gráfico de Evolução dos Lançamentos Pagos por Data
+            let dateAggregates = {};
+            campaignData.pledgesList.forEach(p => {
+                if (p.pago <= 0) return;
+                const d = p.data;
+                dateAggregates[d] = (dateAggregates[d] || 0) + Number(p.pago);
+            });
+
+            const sortedDates = Object.keys(dateAggregates).sort((a, b) => {
+                const parseDate = (dStr) => {
+                    const parts = dStr.split('/');
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                };
+                return parseDate(a) - parseDate(b);
+            });
+
+            const evolutionLabels = [];
+            const evolutionData = [];
+            let cumulative = 0;
+
+            sortedDates.forEach(d => {
+                cumulative += dateAggregates[d];
+                evolutionLabels.push(d);
+                evolutionData.push(cumulative);
+            });
+
+            const ctxEvolution = document.getElementById('evolutionChart').getContext('2d');
+            evolutionChartInstance = new Chart(ctxEvolution, {
+                type: 'line',
+                data: {
+                    labels: evolutionLabels.length > 0 ? evolutionLabels : ['Sem lançamentos'],
+                    datasets: [{
+                        label: 'Acumulado Arrecadado',
+                        data: evolutionData.length > 0 ? evolutionData : [0],
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.05)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#059669',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                callback: function(value) { return 'R$ ' + value.toLocaleString('pt-BR'); },
+                                font: { size: 9 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 9 } }
+                        }
+                    }
+                }
+            });
+
+            // 2. Gráfico de Status das Contribuições
+            let countPago = 0;
+            let countParcial = 0;
+            let countPendente = 0;
+
+            campaignData.pledgesList.forEach(p => {
+                const st = p.status.toLowerCase();
+                if (st === 'pago') countPago++;
+                else if (st === 'parcial' || p.pago > 0) countParcial++;
+                else countPendente++;
+            });
+
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            statusChartInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pago', 'Parcial', 'Pendente'],
+                    datasets: [{
+                        data: [countPago, countParcial, countPendente],
+                        backgroundColor: ['#10b981', '#f59e0b', '#cbd5e1'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    cutout: '70%'
+                }
+            });
+
+            const statusLegend = document.getElementById('status-legend');
+            statusLegend.innerHTML = '';
+            
+            const totalStatus = countPago + countParcial + countPendente;
+            const items = [
+                { label: 'Pago integral', val: countPago, pct: totalStatus > 0 ? (countPago / totalStatus) * 100 : 0, color: '#10b981' },
+                { label: 'Parcial / Aberto', val: countParcial, pct: totalStatus > 0 ? (countParcial / totalStatus) * 100 : 0, color: '#f59e0b' },
+                { label: 'Pendente', val: countPendente, pct: totalStatus > 0 ? (countPendente / totalStatus) * 100 : 0, color: '#cbd5e1' }
+            ];
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between text-xs";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${item.color}"></span>
+                        <span class="font-semibold text-slate-600">${item.label}</span>
+                    </div>
+                    <span class="font-bold text-slate-800">${item.val} <span class="text-slate-400 font-normal ml-1">(${item.pct.toFixed(0)}%)</span></span>
+                `;
+                statusLegend.appendChild(div);
+            });
+
+            // 3. Gráfico de Perfil de Membresia (Membros vs Não Membros)
+            const ctxMembership = document.getElementById('membershipChart').getContext('2d');
+            membershipChartInstance = new Chart(ctxMembership, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Membros', 'Não Membros'],
+                    datasets: [{
+                        data: [campaignData.memberStats.members, campaignData.memberStats.nonMembers],
+                        backgroundColor: ['#059669', '#3b82f6'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    cutout: '70%'
+                }
+            });
+
+            const membershipLegend = document.getElementById('membership-legend');
+            membershipLegend.innerHTML = '';
+            
+            const totalMembers = campaignData.memberStats.members + campaignData.memberStats.nonMembers;
+            const mItems = [
+                { label: 'Membros da IPC', val: campaignData.memberStats.members, pct: totalMembers > 0 ? (campaignData.memberStats.members / totalMembers) * 100 : 0, color: '#059669' },
+                { label: 'Amigos / Visitantes', val: campaignData.memberStats.nonMembers, pct: totalMembers > 0 ? (campaignData.memberStats.nonMembers / totalMembers) * 100 : 0, color: '#3b82f6' }
+            ];
+
+            mItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between text-xs";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${item.color}"></span>
+                        <span class="font-semibold text-slate-600">${item.label}</span>
+                    </div>
+                    <span class="font-bold text-slate-800">${item.val} <span class="text-slate-400 font-normal ml-1">(${item.pct.toFixed(0)}%)</span></span>
+                `;
+                membershipLegend.appendChild(div);
+            });
+        }
+
+        function setSimValue(val) {
+            document.getElementById('sim-input-val').value = val;
+            calculateEquivalence();
+        }
+
+        function calculateEquivalence() {
+            const inputVal = parseFloat(document.getElementById('sim-input-val').value);
+            
+            if (isNaN(inputVal) || inputVal <= 0) {
+                document.getElementById('eq-cement').innerText = '0';
+                document.getElementById('eq-paint').innerText = '0';
+                document.getElementById('eq-tile').innerText = '0';
+                return;
+            }
+
+            const costCement = 45.00; 
+            const costPaint = 250.00; 
+            const costTile = 85.00;   
+
+            const numCement = (inputVal / costCement).toFixed(1);
+            const numPaint = (inputVal / costPaint).toFixed(1);
+            const numTile = (inputVal / costTile).toFixed(1);
+
+            document.getElementById('eq-cement').innerText = numCement.endsWith('.0') ? numCement.slice(0,-2) : numCement;
+            document.getElementById('eq-paint').innerText = numPaint.endsWith('.0') ? numPaint.slice(0,-2) : numPaint;
+            document.getElementById('eq-tile').innerText = numTile.endsWith('.0') ? numTile.slice(0,-2) : numTile;
+        }
+    </script>
+</body>
+</html>
