@@ -54,21 +54,28 @@
                     </div>
                 </div>
 
-                <!-- Menu/Navegação -->
-                <nav class="flex flex-wrap justify-center gap-2 bg-emerald-950/50 p-1.5 rounded-xl border border-emerald-800/40">
-                    <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-emerald-600 text-white shadow-md">
-                        <i class="fa-solid fa-chart-line mr-2"></i>Visão Geral
+                <!-- Menu/Navegação & Botão Sincronizar Rápido -->
+                <div class="flex flex-col sm:flex-row items-center gap-3">
+                    <nav class="flex flex-wrap justify-center gap-2 bg-emerald-950/50 p-1.5 rounded-xl border border-emerald-800/40">
+                        <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-emerald-600 text-white shadow-md">
+                            <i class="fa-solid fa-chart-line mr-2"></i>Visão Geral
+                        </button>
+                        <button onclick="switchTab('pledges')" id="tab-pledges" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200">
+                            <i class="fa-solid fa-users mr-2"></i>Compromissos Realizados
+                        </button>
+                        <button onclick="switchTab('categories')" id="tab-categories" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200">
+                            <i class="fa-solid fa-layer-group mr-2"></i>Metas por Categoria
+                        </button>
+                        <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200">
+                            <i class="fa-solid fa-calculator mr-2"></i>Simulador & Pix
+                        </button>
+                    </nav>
+                    
+                    <!-- Botão de Sincronizar Nuvem Rápido (Visível apenas quando conectado ao Sheets) -->
+                    <button id="btn-quick-sync" onclick="syncGoogleSheet()" class="hidden px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md border border-emerald-500/20 whitespace-nowrap">
+                        <i id="quick-sync-icon" class="fa-solid fa-arrows-rotate"></i> Atualizar Dados
                     </button>
-                    <button onclick="switchTab('pledges')" id="tab-pledges" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200">
-                        <i class="fa-solid fa-users mr-2"></i>Compromissos Realizados
-                    </button>
-                    <button onclick="switchTab('categories')" id="tab-categories" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200">
-                        <i class="fa-solid fa-layer-group mr-2"></i>Metas por Categoria
-                    </button>
-                    <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200">
-                        <i class="fa-solid fa-calculator mr-2"></i>Simulador & Pix
-                    </button>
-                </nav>
+                </div>
             </div>
         </div>
     </header>
@@ -174,10 +181,16 @@
                     </div>
                 </div>
                 
-                <!-- Indicador de Status dos Dados -->
-                <div id="data-status-bar" class="flex items-center gap-2 text-xs bg-emerald-50 text-emerald-800 px-3 py-2.5 rounded-lg border border-emerald-100">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span id="data-status-text">Visualizando dados de demonstração integrados. Insira seu arquivo Excel para atualizar.</span>
+                <!-- Indicador de Status dos Dados (Adaptado para botão de ação) -->
+                <div id="data-status-bar" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-emerald-50 text-emerald-800 px-3 py-2.5 rounded-lg border border-emerald-100">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="data-status-text">Visualizando dados de demonstração integrados. Insira seu arquivo Excel para atualizar.</span>
+                    </div>
+                    <!-- Botão de Sincronizar na barra de status, visível apenas quando conectado -->
+                    <button id="btn-status-sync" onclick="syncGoogleSheet()" class="hidden px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0 whitespace-nowrap">
+                        <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Sincronizar Agora
+                    </button>
                 </div>
 
                 <!-- Central de Diagnóstico Técnico de Importação -->
@@ -537,7 +550,7 @@
                     <div>
                         <span class="text-[10px] bg-emerald-800 border border-emerald-700 font-bold px-2 py-1 rounded-md uppercase tracking-widest text-emerald-300">Como Contribuir?</span>
                         <h3 class="text-lg font-bold text-white mt-3">Faça Parte Desta História</h3>
-                        <p class="text-xs text-emerald-100/80 mt-1">Sua contribuição ajudará na realização desse lindo projeto de restauração da nossa igreja.</p>
+                        <p class="text-xs text-emerald-100/80 mt-1">Sua contribuição ajudará na realização desse lindo projeto de reforma da fachada da nossa igreja.</p>
                     </div>
 
                     <div class="my-6 flex flex-col sm:flex-row items-center gap-6 bg-white/5 p-4 rounded-xl border border-white/10">
@@ -576,7 +589,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
             <div>
                 <p class="font-bold text-slate-200">Igreja Presbiteriana do Centenário</p>
-                <p class="text-[11px] mt-0.5">"O Senhor ama a quem dá com alegria.” (2 Coríntios 9:7)</p>
+                <p class="text-[11px] mt-0.5">O Senhor ama a quem dá com alegria.” (2 Coríntios 9:7)</p>
             </div>
             <div>
                 <p>© 2026 IPC Centenário. Desenvolvido para transparência e gestão de fé.</p>
@@ -604,217 +617,10 @@
         let statusChartInstance = null;
         let membershipChartInstance = null;
 
-        window.onload = function() {
-            // Verifica se há ID do Google Sheets salvo anteriormente
-            const savedGSheetId = localStorage.getItem('ipc_gsheet_id');
-            if (savedGSheetId) {
-                document.getElementById('gsheet-url').value = `https://docs.google.com/spreadsheets/d/${savedGSheetId}`;
-                document.getElementById('btn-disconnect-cloud').classList.remove('hidden');
-                syncGoogleSheet();
-            } else if (!isExported) {
-                loadMockData();
-            } else {
-                processAndRenderData();
-                document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-emerald-100 text-emerald-900 px-3 py-2.5 rounded-lg border border-emerald-200 font-semibold";
-                document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> Visualizando dados consolidados exportados da campanha da IPC.`;
-                logDiagnostic("Iniciado com sucesso a partir de arquivo offline exportado.", "success");
-            }
-            calculateEquivalence();
-        };
-
-        // Altera abas do configurador (Cloud vs Arquivo Local)
-        function switchImporterTab(tabType) {
-            document.getElementById('importer-tab-cloud').className = "px-4 py-2 text-xs font-bold border-b-2 " + (tabType === 'cloud' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-400 hover:text-slate-600') + " flex items-center gap-1.5 transition-all";
-            document.getElementById('importer-tab-local').className = "px-4 py-2 text-xs font-bold border-b-2 " + (tabType === 'local' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-400 hover:text-slate-600') + " flex items-center gap-1.5 transition-all";
-            
-            if (tabType === 'cloud') {
-                document.getElementById('importer-content-cloud').classList.remove('hidden');
-                document.getElementById('importer-content-local').classList.add('hidden');
-            } else {
-                document.getElementById('importer-content-cloud').classList.add('hidden');
-                document.getElementById('importer-content-local').classList.remove('hidden');
-            }
-        }
-
-        // Extrai o ID único de uma URL do Google Planilhas
-        function extractSheetId(url) {
-            const matches = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-            return matches ? matches[1] : url.trim();
-        }
-
-        // Sincroniza dinamicamente puxando a planilha do Google Sheets via Fetch com múltiplos proxies e bypass CORS inteligente
-        async function syncGoogleSheet() {
-            const inputVal = document.getElementById('gsheet-url').value;
-            const sheetId = extractSheetId(inputVal);
-
-            if (!sheetId) {
-                showNotification("Por favor, cole um link ou ID válido do Google Planilhas.", "error");
-                return;
-            }
-
-            const targetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
-            
-            // Esteira sequencial de proxies para contornar qualquer barreira de CORS do navegador
-            const proxies = [
-                // Rota 1: AllOrigins (Altamente estável e permissivo para qualquer origem de sandbox)
-                url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                // Rota 2: CodeTabs CORS Proxy (Extremamente rápido como fallback)
-                url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-                // Rota 3: corsproxy.io (Como contingência final)
-                url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
-            ];
-
-            document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-amber-50 text-amber-800 px-3 py-2.5 rounded-lg border border-amber-100";
-            document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Conectando à nuvem Google Sheets...`;
-            
-            document.getElementById('diagnostics-panel').innerHTML = '';
-            logDiagnostic(`Iniciando conexão segura com Google Sheets. ID: "${sheetId}"`);
-
-            let success = false;
-            let bytes = null;
-
-            for (let i = 0; i < proxies.length; i++) {
-                const routeNum = i + 1;
-                const proxyUrl = proxies[i](targetUrl);
-                logDiagnostic(`Tentando carregar dados via Rota ${routeNum}...`);
-
-                try {
-                    const response = await fetch(proxyUrl);
-                    if (!response.ok) {
-                        throw new Error(`Servidor proxy retornou erro HTTP ${response.status}`);
-                    }
-
-                    const arrayBuffer = await response.arrayBuffer();
-                    bytes = new Uint8Array(arrayBuffer);
-
-                    // Validação de assinatura ZIP 'PK' (0x50, 0x4B) padrão para arquivos .xlsx
-                    if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B) {
-                        success = true;
-                        logDiagnostic(`Download e validação concluídos com sucesso via Rota ${routeNum}!`, 'success');
-                        break;
-                    } else {
-                        throw new Error("O arquivo retornado não possui assinatura binária de um documento Excel válido.");
-                    }
-                } catch (err) {
-                    logDiagnostic(`Falha na Rota ${routeNum}: ${err.message}`, 'warn');
-                }
-            }
-
-            try {
-                if (!success) {
-                    throw new Error("Não foi possível estabelecer contato através de nenhum servidor de segurança. Verifique se o compartilhamento geral da sua planilha está ativado como 'Leitor' para 'Qualquer pessoa com o link'.");
-                }
-
-                logDiagnostic("Iniciando decodificação e processamento do arquivo binário (.xlsx).");
-                const workbook = XLSX.read(bytes, { type: 'array' });
-                processWorkbook(workbook, "Google Planilhas");
-
-                // Salva no localStorage para auto-atualizar nas próximas visitas
-                localStorage.setItem('ipc_gsheet_id', sheetId);
-                document.getElementById('btn-disconnect-cloud').classList.remove('hidden');
-
-                document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-emerald-100 text-emerald-900 px-3 py-2.5 rounded-lg border border-emerald-200 font-semibold";
-                document.getElementById('data-status-text').innerHTML = `<i class="fa-solid fa-cloud text-emerald-600"></i> Conectado e Sincronizado com o Google Sheets!`;
-                
-                showNotification("Sincronizado com o Google Sheets!", "success");
-
-                setTimeout(() => {
-                    toggleImporter();
-                }, 1200);
-
-            } catch (error) {
-                console.error(error);
-                document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-red-50 text-red-800 px-3 py-2.5 rounded-lg border border-red-100";
-                document.getElementById('data-status-text').innerText = "Erro ao conectar. Verifique se o link está público e se a planilha possui dados.";
-                
-                logDiagnostic(`Erro na conexão online: ${error.message}`, 'error');
-                showNotification("Erro na sincronização. Detalhes salvos na central de diagnóstico.", "error");
-            }
-        }
-
-        // Desconecta e remove a sincronização do Google Sheets
-        function disconnectGoogleSheet() {
-            localStorage.removeItem('ipc_gsheet_id');
-            document.getElementById('gsheet-url').value = '';
-            document.getElementById('btn-disconnect-cloud').classList.add('hidden');
-            logDiagnostic("Conexão com Google Planilhas desfeita.");
-            showNotification("Conexão de nuvem removida.", "info");
-            loadMockData();
-        }
-
-        // Função para exportar o HTML completo já pré-configurado com os dados atuais
-        function exportHTML() {
-            logDiagnostic("Iniciando processo de geração de arquivo exportável...");
-            
-            let source = document.documentElement.outerHTML;
-            let fullHTMLFile = "<!DOCTYPE html>\n" + source;
-
-            const dataToInject = JSON.stringify(campaignData, null, 4);
-
-            const originalDataRegex = /let campaignData = \{[\s\S]*?\};/;
-            const replacementData = `let campaignData = ${dataToInject};`;
-            
-            fullHTMLFile = fullHTMLFile.replace(originalDataRegex, replacementData);
-            fullHTMLFile = fullHTMLFile.replace("let isExported = false;", "let isExported = true;");
-
-            try {
-                const blob = new Blob([fullHTMLFile], { type: "text/html;charset=utf-8" });
-                const url = URL.createObjectURL(blob);
-                
-                const dateSuffix = new Date().toISOString().slice(0, 10).replace(/-/g, '_');
-                const downloadLink = document.createElement("a");
-                downloadLink.href = url;
-                downloadLink.download = `Painel_Campanha_Reforma_IPC_${dateSuffix}.html`;
-                
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-                URL.revokeObjectURL(url);
-                
-                logDiagnostic("Arquivo HTML exportado com êxito!", "success");
-                showNotification("Seu painel completo foi exportado! Você pode abri-lo de forma independente em qualquer dispositivo.", "success");
-            } catch (err) {
-                logDiagnostic(`Erro ao tentar exportar arquivo: ${err.message}`, "error");
-                showNotification("Ocorreu um erro ao exportar o painel.", "error");
-            }
-        }
-
-        // Função para ocultar ou exibir a seção do leitor da planilha IPC
-        function toggleImporter() {
-            const content = document.getElementById('importer-content');
-            const icon = document.getElementById('icon-toggle-importer');
-            const text = document.getElementById('text-toggle-importer');
-            const badge = document.getElementById('badge-importer-status');
-            
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                icon.className = "fa-solid fa-chevron-up transition-transform duration-200";
-                text.innerText = "Ocultar Configuração";
-                badge.innerText = "Ativo";
-                badge.className = "text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium";
-            } else {
-                content.classList.add('hidden');
-                icon.className = "fa-solid fa-chevron-down transition-transform duration-200";
-                text.innerText = "Mostrar Configuração";
-                badge.innerText = "Oculto";
-                badge.className = "text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium border border-amber-100";
-            }
-        }
-
-        function toggleDiagnostics() {
-            const panel = document.getElementById('diagnostics-panel');
-            const icon = document.getElementById('diag-toggle-icon');
-            if (panel.classList.contains('hidden')) {
-                panel.classList.remove('hidden');
-                icon.className = "fa-solid fa-chevron-up";
-            } else {
-                panel.classList.add('hidden');
-                icon.className = "fa-solid fa-chevron-down";
-            }
-        }
-
+        // Central de Logs de Diagnóstico
         function logDiagnostic(message, type = 'info') {
             const panel = document.getElementById('diagnostics-panel');
+            if (!panel) return;
             
             if (panel.innerHTML.includes('Nenhum diagnóstico gerado')) {
                 panel.innerHTML = '';
@@ -832,145 +638,195 @@
             panel.scrollTop = panel.scrollHeight;
         }
 
-        function parsePortugueseNumber(val) {
-            if (val === undefined || val === null) return 0;
-            if (typeof val === 'number') return val;
+        // NOVO: Função utilitária para converter Base64 do AllOrigins JSON de volta para array binário
+        function base64ToUint8Array(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // NOVO E ROBUSTO: Tradutor inteligente de links do Google Planilhas (detecta publicados d/e/ e compartilhados normais)
+        function getGoogleSheetsExportUrl(input) {
+            const url = input.trim();
             
-            let str = String(val).trim();
-            if (!str) return 0;
+            // Caso seja uma URL publicada na Web (contém /d/e/ e 2PACX)
+            const publishedMatch = url.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
+            if (publishedMatch) {
+                const pubId = publishedMatch[1];
+                logDiagnostic(`Detetada planilha do Google PUBLICADA NA WEB. ID: "${pubId.substring(0, 15)}..."`, "info");
+                return `https://docs.google.com/spreadsheets/d/e/${pubId}/pub?output=xlsx`;
+            }
+            
+            // Caso seja uma URL de compartilhamento padrão
+            const standardMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (standardMatch) {
+                const sheetId = standardMatch[1];
+                logDiagnostic(`Detetada planilha do Google COMPARTILHADA PADRÃO. ID: "${sheetId}"`, "info");
+                return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+            }
+            
+            // Fallback direto por string
+            if (url.startsWith("2PACX")) {
+                return `https://docs.google.com/spreadsheets/d/e/${url}/pub?output=xlsx`;
+            }
+            return `https://docs.google.com/spreadsheets/d/${url}/export?format=xlsx`;
+        }
 
-            str = str.replace(/R\$\s*/g, '').replace(/[\s]/g, '');
+        // Sincroniza dinamicamente puxando a planilha do Google Sheets via Fetch com múltiplos proxies de bypass CORS de alto desempenho
+        async function syncGoogleSheet() {
+            const inputVal = document.getElementById('gsheet-url').value;
+            const targetUrl = getGoogleSheetsExportUrl(inputVal);
 
-            if (str.includes(',') && str.includes('.')) {
-                str = str.replace(/\./g, '').replace(/,/g, '.');
-            } else if (str.includes(',')) {
-                str = str.replace(/,/g, '.');
-            } else if (str.includes('.')) {
-                const parts = str.split('.');
-                if (parts[parts.length - 1].length === 3) {
-                    str = str.replace(/\./g, '');
-                }
+            if (!inputVal) {
+                showNotification("Por favor, cole um link válido do Google Planilhas.", "error");
+                return;
             }
 
-            str = str.replace(/[^\d.-]/g, '');
-            const parsed = parseFloat(str);
-            return isNaN(parsed) ? 0 : parsed;
-        }
+            // Ativa animação de rotação nos ícones de atualização
+            const quickIcon = document.getElementById('quick-sync-icon');
+            if (quickIcon) quickIcon.classList.add('animate-spin');
 
-        function showNotification(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
+            // Definição das rotas de Proxy para tolerar bloqueios de ambiente sandbox (Ordenados por resiliência a binários)
+            // IMPORTANTE: AllOrigins está em modo JSON `/get` que empacota o binário em Base64 e evita HTTP 400!
+            const proxiedUrls = [
+                targetUrl, // Rota 0: Direta (Sem proxy, se o navegador/CORS já permitir)
+                `https://corsproxy.org/?url=${encodeURIComponent(targetUrl)}`, // Rota 1: CORSProxy.org (Excelente para binários)
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, // Rota 2: AllOrigins Raw (Excelente para binários)
+                `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, // Rota 3: AllOrigins Envelope (JSON + Base64)
+                `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`, // Rota 4: CodeTabs (Raw Fallback)
+                `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`, // Rota 5: CORSProxy.io
+                `https://thingproxy.freeboard.io/fetch/${targetUrl}` // Rota 6: ThingProxy
+            ];
+
+            document.getElementById('data-status-bar').className = "flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-amber-50 text-amber-800 px-3 py-2.5 rounded-lg border border-amber-100";
+            document.getElementById('data-status-text').innerHTML = `<span><i class="fa-solid fa-spinner animate-spin"></i> Conectando à nuvem Google Sheets...</span>`;
             
-            const bgColor = type === 'success' ? 'bg-emerald-800 border-emerald-700' : 
-                            type === 'error' ? 'bg-red-800 border-red-700' : 'bg-slate-800 border-slate-700';
-            const icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 
-                         type === 'error' ? 'fa-circle-xmark text-red-400' : 'fa-circle-info text-blue-400';
+            document.getElementById('diagnostics-panel').innerHTML = '';
+            logDiagnostic(`Iniciando conexão segura com Google Sheets. Rota de Destino: "${targetUrl}"`);
 
-            toast.className = `flex items-center gap-3 text-white text-xs font-semibold px-4 py-3 rounded-xl border shadow-lg mb-2 transition-all duration-300 transform translate-y-2 opacity-0 ${bgColor}`;
-            toast.innerHTML = `
-                <i class="fa-solid ${icon} text-base"></i>
-                <div class="flex-grow">${message}</div>
-                <button onclick="this.parentElement.remove()" class="text-white/60 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            `;
-            
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-[-10px]');
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
+            let success = false;
+            let bytes = null;
+            let lastErrorMessage = "Nenhum proxy pôde estabelecer uma conexão estável com o Google Drive.";
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
-
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200";
-            });
-
-            const activeBtn = document.getElementById(`tab-${tabId}`);
-            if (activeBtn) {
-                activeBtn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-emerald-600 text-white shadow-md";
-            }
-        }
-
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-        }
-
-        function formatDate(excelDate) {
-            if (!excelDate) return 'S/D';
-            
-            if (typeof excelDate === 'number') {
+            // Percorre a esteira de proxies tentando obter o arquivo binário
+            for (let routeIdx = 0; routeIdx < proxiedUrls.length; routeIdx++) {
+                const proxyUrl = proxiedUrls[routeIdx];
+                const routeName = routeIdx === 0 ? "Direta" : `Proxy ${routeIdx}`;
+                logDiagnostic(`Tentando carregar os dados através da Rota [${routeName}] de redundância...`);
+                
                 try {
-                    const date = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
-                    const day = String(date.getUTCDate()).padStart(2, '0');
-                    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                    const year = date.getUTCFullYear();
-                    return `${day}/${month}/${year}`;
-                } catch(err) {
-                    return String(excelDate);
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) {
+                        throw new Error(`O servidor proxy respondeu com erro HTTP ${response.status}`);
+                    }
+
+                    // Se for AllOrigins JSON /get (Rota 3)
+                    if (proxyUrl.includes("allorigins.win/get")) {
+                        const json = await response.json();
+                        if (json.contents) {
+                            const contents = json.contents;
+                            if (contents.startsWith("data:") && contents.includes("base64,")) {
+                                const base64 = contents.split("base64,")[1];
+                                bytes = base64ToUint8Array(base64);
+                            } else {
+                                // Se for apenas string de erro HTML
+                                if (contents.includes("<html") || contents.includes("<!DOCTYPE") || contents.includes("signin")) {
+                                    throw new Error("O Google retornou uma página de login. Certifique-se de que a planilha está compartilhada como 'Qualquer pessoa com o link' em modo Leitor.");
+                                }
+                                bytes = new TextEncoder().encode(contents);
+                            }
+                        } else {
+                            throw new Error("AllOrigins não retornou conteúdo válido.");
+                        }
+                    } else {
+                        // Proxies de stream de bytes brutos (CORSProxy, Raw AllOrigins, Codetabs)
+                        const arrayBuffer = await response.arrayBuffer();
+                        bytes = new Uint8Array(arrayBuffer);
+                    }
+
+                    // Validação ZIP 'PK' (0x50, 0x4B) padrão para arquivos .xlsx legítimos
+                    if (bytes.length > 4 && bytes[0] === 0x50 && bytes[1] === 0x4B) {
+                        logDiagnostic(`Assinatura de arquivo Excel (.xlsx) validada com sucesso na Rota [${routeName}].`, "success");
+                        success = true;
+                        break;
+                    } else {
+                        // Se o conteúdo começar com tags HTML, o Google barrou e retornou uma página de erro ou login
+                        const textPreview = new TextDecoder().decode(bytes.slice(0, 150));
+                        if (textPreview.includes("<html") || textPreview.includes("<!DOCTYPE") || textPreview.includes("<script")) {
+                            logDiagnostic(`Rota [${routeName}] recebeu página HTML de resposta (possível bloqueio).`, "warn");
+                            if (textPreview.includes("ServiceLogin") || textPreview.includes("signin") || textPreview.includes("accounts.google")) {
+                                throw new Error("Acesso negado pelo Google. Se você usa uma conta institucional/corporativa (GSuite/Workspace), verifique se o compartilhamento permite acesso por qualquer pessoa fora da organização.");
+                            } else {
+                                throw new Error("O Google recusou a conexão. Verifique se a planilha não foi excluída e se o link público está correto.");
+                            }
+                        }
+                        throw new Error("Os dados recebidos estão em formato inválido ou corrompidos pelo proxy.");
+                    }
+                } catch (err) {
+                    lastErrorMessage = err.message;
+                    logDiagnostic(`Rota [${routeName}] falhou: ${err.message}`, "warn");
                 }
             }
 
-            let str = String(excelDate).trim();
-            if (str.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const parts = str.split('-');
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            // Desativa animação de rotação nos ícones de atualização
+            if (quickIcon) quickIcon.classList.remove('animate-spin');
+
+            if (success && bytes) {
+                try {
+                    const workbook = XLSX.read(bytes, { type: 'array' });
+                    processWorkbook(workbook, "Google Planilhas");
+
+                    // Salva no localStorage para auto-atualizar nas próximas visitas
+                    localStorage.setItem('ipc_gsheet_url', inputVal);
+                    document.getElementById('btn-disconnect-cloud').classList.remove('hidden');
+                    
+                    // Exibe os botões de sincronização rápida
+                    document.getElementById('btn-quick-sync').classList.remove('hidden');
+                    document.getElementById('btn-status-sync').classList.remove('hidden');
+
+                    document.getElementById('data-status-bar').className = "flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-emerald-100 text-emerald-900 px-3 py-2.5 rounded-lg border border-emerald-200 font-semibold";
+                    document.getElementById('data-status-text').innerHTML = `<span><i class="fa-solid fa-cloud text-emerald-600"></i> Sincronizado com o Google Sheets!</span>`;
+                    
+                    showNotification("Sincronizado com o Google Sheets!", "success");
+
+                    setTimeout(() => {
+                        const content = document.getElementById('importer-content');
+                        if (content && !content.classList.contains('hidden')) {
+                            toggleImporter();
+                        }
+                    }, 1200);
+                } catch (parseError) {
+                    logDiagnostic(`Erro ao estruturar o arquivo processado: ${parseError.message}`, "error");
+                    showNotification("Erro na leitura das tabelas. Verifique a central de diagnóstico.", "error");
+                    
+                    document.getElementById('data-status-bar').className = "flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-red-50 text-red-800 px-3 py-2.5 rounded-lg border border-red-100";
+                    document.getElementById('data-status-text').innerHTML = `<span><i class="fa-solid fa-circle-exclamation text-red-600"></i> Erro de leitura de tabelas: ${parseError.message}</span>`;
+                }
+            } else {
+                document.getElementById('data-status-bar').className = "flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-red-50 text-red-800 px-3 py-2.5 rounded-lg border border-red-100";
+                document.getElementById('data-status-text').innerHTML = `<span><i class="fa-solid fa-circle-exclamation text-red-600"></i> Falha: ${lastErrorMessage}</span>`;
+                logDiagnostic(`Todas as rotas de conexão falharam. Último erro registrado: ${lastErrorMessage}`, 'error');
+                showNotification(`Erro de sincronização: ${lastErrorMessage}`, "error");
             }
-            return str;
         }
 
-        function copyPixKey() {
-            const pixKey = document.getElementById('pix-key').innerText;
-            const tempInput = document.createElement('input');
-            tempInput.value = pixKey;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            showNotification('Chave PIX copiada para a área de transferência!', 'success');
-        }
-
-        function loadMockData() {
-            logDiagnostic("Carregando banco de dados de demonstração padrão...");
+        // Desconecta e remove a sincronização do Google Sheets
+        function disconnectGoogleSheet() {
+            localStorage.removeItem('ipc_gsheet_url');
+            document.getElementById('gsheet-url').value = '';
+            document.getElementById('btn-disconnect-cloud').classList.add('hidden');
             
-            campaignData.totalChurchMembers = 140; // Simulado da célula B2 (Pág. 1)
-            campaignData.totalCompromisso = 45500.00; // Simulado das colunas Z, AA, AB, AC da Página 2
-
-            campaignData.categoriesBreakdown = [
-                { category: "Classe Ouro (Grandes Contribuintes)", targetPeople: 22, targetValue: 22000.00, confirmedPeople: 2 },
-                { category: "Classe Prata (Doações Médias)", targetPeople: 50, targetValue: 25000.00, confirmedPeople: 2 },
-                { category: "Classe Bronze (Contribuições Simples)", targetPeople: 30, targetValue: 9000.00, confirmedPeople: 1 },
-                { category: "Parcerias e Coleta de Eventos", targetPeople: 20, targetValue: 4000.00, confirmedPeople: 1 }
-            ];
-
-            campaignData.pledgesList = [
-                { nome: 'Família Albuquerque Sampaio', comprometido: 5000.00, pago: 5000.00, status: 'Pago', data: '12/03/2026', tipoMembro: 'Membro' },
-                { nome: 'Presbítero Antônio Neves', comprometido: 2000.00, pago: 1000.00, status: 'Parcial', data: '15/03/2026', tipoMembro: 'Membro' },
-                { nome: 'Augusta Vieira de Melo', comprometido: 500.00, pago: 500.00, status: 'Pago', data: '22/03/2026', tipoMembro: 'Membro' },
-                { nome: 'Família Pereira Guimarães', comprometido: 10000.00, pago: 4000.00, status: 'Parcial', data: '02/04/2026', tipoMembro: 'Membro' },
-                { nome: 'Diácono Lucas Medeiros', comprometido: 1500.00, pago: 1500.00, status: 'Pago', data: '08/04/2026', tipoMembro: 'Membro' },
-                { nome: 'Carlos Eduardo Ramos', comprometido: 3000.00, pago: 0.00, status: 'Pendente', data: '15/04/2026', tipoMembro: 'Não Membro' },
-                { nome: 'Classe de EBD Unitas', comprometido: 4500.00, pago: 4500.00, status: 'Pago', data: '25/04/2026', tipoMembro: 'Membro' },
-                { nome: 'Mariana & Rogério Coutinho', comprometido: 2500.00, pago: 1250.00, status: 'Parcial', data: '29/04/2026', tipoMembro: 'Não Membro' },
-                { nome: 'Família Silva Ramos', comprometido: 1000.00, pago: 1000.00, status: 'Pago', data: '05/05/2026', tipoMembro: 'Membro' },
-                { nome: 'Pastor Cláudio de Souza', comprometido: 3000.00, pago: 3000.00, status: 'Pago', data: '10/05/2026', tipoMembro: 'Membro' },
-                { nome: 'Grupo de Homens IPC', comprometido: 8000.00, pago: 4000.00, status: 'Parcial', data: '20/05/2026', tipoMembro: 'Membro' },
-                { nome: 'Família Nogueira Costa', comprometido: 1200.00, pago: 1200.00, status: 'Pago', data: '22/05/2026', tipoMembro: 'Não Membro' }
-            ];
-
-            campaignData.targetValue = campaignData.categoriesBreakdown.reduce((sum, item) => sum + item.targetValue, 0);
-            campaignData.targetPeople = campaignData.categoriesBreakdown.reduce((sum, item) => sum + item.targetPeople, 0);
-
-            document.getElementById('data-status-bar').className = "flex items-center gap-2 text-xs bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg border border-emerald-100";
-            document.getElementById('data-status-text').innerText = "Visualizando dados de demonstração integrados. Insira seu arquivo Excel para atualizar.";
+            // Oculta os botões de sincronização rápida
+            document.getElementById('btn-quick-sync').classList.add('hidden');
+            document.getElementById('btn-status-sync').classList.add('hidden');
             
-            logDiagnostic("Soma da meta padrão (C7:C10): " + formatCurrency(campaignData.targetValue), "success");
-            logDiagnostic("Pessoas alvo padrão (B7:B10): " + campaignData.targetPeople + " membros", "success");
-            
-            processAndRenderData();
+            logDiagnostic("Conexão com Google Planilhas desfeita.");
+            showNotification("Conexão de nuvem removida.", "info");
+            loadMockData();
         }
 
         // Processamento Centralizado da Pasta de Trabalho do Excel (Compartilhado entre Cloud e local)
@@ -1241,7 +1097,10 @@
                     showNotification(`Planilha "${file.name}" processada com êxito!`, 'success');
 
                     setTimeout(() => {
-                        toggleImporter();
+                        const content = document.getElementById('importer-content');
+                        if (content && !content.classList.contains('hidden')) {
+                            toggleImporter();
+                        }
                     }, 1200);
 
                 } catch (error) {
@@ -1675,6 +1534,177 @@
             document.getElementById('eq-cement').innerText = numCement.endsWith('.0') ? numCement.slice(0,-2) : numCement;
             document.getElementById('eq-paint').innerText = numPaint.endsWith('.0') ? numPaint.slice(0,-2) : numPaint;
             document.getElementById('eq-tile').innerText = numTile.endsWith('.0') ? numTile.slice(0,-2) : numTile;
+        }
+
+        function toggleImporter() {
+            const content = document.getElementById('importer-content');
+            const icon = document.getElementById('icon-toggle-importer');
+            const text = document.getElementById('text-toggle-importer');
+            const badge = document.getElementById('badge-importer-status');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.className = "fa-solid fa-chevron-up transition-transform duration-200";
+                text.innerText = "Ocultar Configuração";
+                badge.innerText = "Ativo";
+                badge.className = "text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium";
+            } else {
+                content.classList.add('hidden');
+                icon.className = "fa-solid fa-chevron-down transition-transform duration-200";
+                text.innerText = "Mostrar Configuração";
+                badge.innerText = "Oculto";
+                badge.className = "text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium border border-amber-100";
+            }
+        }
+
+        function toggleDiagnostics() {
+            const panel = document.getElementById('diagnostics-panel');
+            const icon = document.getElementById('diag-toggle-icon');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                icon.className = "fa-solid fa-chevron-up";
+            } else {
+                panel.classList.add('hidden');
+                icon.className = "fa-solid fa-chevron-down";
+            }
+        }
+
+        function parsePortugueseNumber(val) {
+            if (val === undefined || val === null) return 0;
+            if (typeof val === 'number') return val;
+            
+            let str = String(val).trim();
+            if (!str) return 0;
+
+            str = str.replace(/R\$\s*/g, '').replace(/[\s]/g, '');
+
+            if (str.includes(',') && str.includes('.')) {
+                str = str.replace(/\./g, '').replace(/,/g, '.');
+            } else if (str.includes(',')) {
+                str = str.replace(/,/g, '.');
+            } else if (str.includes('.')) {
+                const parts = str.split('.');
+                if (parts[parts.length - 1].length === 3) {
+                    str = str.replace(/\./g, '');
+                }
+            }
+
+            str = str.replace(/[^\d.-]/g, '');
+            const parsed = parseFloat(str);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            
+            const bgColor = type === 'success' ? 'bg-emerald-800 border-emerald-700' : 
+                            type === 'error' ? 'bg-red-800 border-red-700' : 'bg-slate-800 border-slate-700';
+            const icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 
+                         type === 'error' ? 'fa-circle-xmark text-red-400' : 'fa-circle-info text-blue-400';
+
+            toast.className = `flex items-center gap-3 text-white text-xs font-semibold px-4 py-3 rounded-xl border shadow-lg mb-2 transition-all duration-300 transform translate-y-2 opacity-0 ${bgColor}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-base"></i>
+                <div class="flex-grow">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-white/60 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-semibold text-emerald-200 hover:text-white hover:bg-emerald-800/50 transition-all duration-200";
+            });
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-emerald-600 text-white shadow-md";
+            }
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function formatDate(excelDate) {
+            if (!excelDate) return 'S/D';
+            
+            if (typeof excelDate === 'number') {
+                try {
+                    const date = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
+                    const day = String(date.getUTCDate()).padStart(2, '0');
+                    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                    const year = date.getUTCFullYear();
+                    return `${day}/${month}/${year}`;
+                } catch(err) {
+                    return String(excelDate);
+                }
+            }
+
+            let str = String(excelDate).trim();
+            if (str.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const parts = str.split('-');
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return str;
+        }
+
+        function copyPixKey() {
+            const pixKey = document.getElementById('pix-key').innerText;
+            const tempInput = document.createElement('input');
+            tempInput.value = pixKey;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showNotification('Chave PIX copiada para a área de transferência!', 'success');
+        }
+
+        function exportHTML() {
+            logDiagnostic("Iniciando processo de geração de arquivo exportável...");
+            
+            let source = document.documentElement.outerHTML;
+            let fullHTMLFile = "<!DOCTYPE html>\n" + source;
+
+            const dataToInject = JSON.stringify(campaignData, null, 4);
+
+            const originalDataRegex = /let campaignData = \{[\s\S]*?\};/;
+            const replacementData = `let campaignData = ${dataToInject};`;
+            
+            fullHTMLFile = fullHTMLFile.replace(originalDataRegex, replacementData);
+            fullHTMLFile = fullHTMLFile.replace("let isExported = false;", "let isExported = true;");
+
+            try {
+                const blob = new Blob([fullHTMLFile], { type: "text/html;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                
+                const dateSuffix = new Date().toISOString().slice(0, 10).replace(/-/g, '_');
+                const downloadLink = document.createElement("a");
+                downloadLink.href = url;
+                downloadLink.download = `Painel_Campanha_Reforma_IPC_${dateSuffix}.html`;
+                
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(url);
+                
+                logDiagnostic("Arquivo HTML exportado com êxito!", "success");
+                showNotification("Seu painel completo foi exportado! Você pode abri-lo de forma independente em qualquer dispositivo.", "success");
+            } catch (err) {
+                logDiagnostic(`Erro ao tentar exportar arquivo: ${err.message}`, "error");
+                showNotification("Ocorreu um erro ao exportar o painel.", "error");
+            }
         }
     </script>
 </body>
