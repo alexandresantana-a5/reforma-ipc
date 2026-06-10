@@ -1129,8 +1129,9 @@
             let countNaoMembros = 0;
 
             campaignData.pledgesList.forEach(p => {
-                const tipo = p.tipoMembro ? p.tipoMembro.trim().toLowerCase() : '';
-                if (tipo.includes('nao') || tipo.includes('visitante') || tipo.includes('externo')) {
+                // Normalização robusta para evitar problemas de acentuação (ex: "não" vs "nao")
+                const tipoNorm = p.tipoMembro ? p.tipoMembro.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+                if (tipoNorm.includes('nao') || tipoNorm.includes('visitante') || tipoNorm.includes('externo') || tipoNorm.includes('amigo')) {
                     countNaoMembros++;
                 } else {
                     countMembros++;
